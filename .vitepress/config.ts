@@ -26,7 +26,8 @@ export default defineConfig({
   },
 
   head: [
-    ['link', { rel: 'icon', type: 'image/png', href: '/laravel-mosparo/mo.png' }],
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/laravel-mosparo/favicon.svg' }],
+    ['link', { rel: 'alternate icon', type: 'image/png', href: '/laravel-mosparo/mo.png' }],
     ['meta', { property: 'og:image', content: 'https://exeque.github.io/laravel-mosparo/cover.jpg' }],
   ],
 
