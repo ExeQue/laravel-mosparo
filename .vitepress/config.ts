@@ -42,7 +42,7 @@ export default defineConfig({
   },
 
   themeConfig: {
-    logo: '/mo.png',
+    logo: { light: '/bird.svg', dark: '/bird-dark.svg' },
 
     nav: [
       { text: 'Documentation', link: '/docs/' },
