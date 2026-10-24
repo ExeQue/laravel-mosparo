@@ -31,8 +31,10 @@ function boxConfig(string $html): array
 
 describe('@mosparoScript', function () {
     it('loads mosparo\'s frontend and the script that starts the boxes', function () {
+        $this->travelTo('2026-10-24 12:00');
+
         expect(Blade::render('@mosparoScript'))
-            ->toContain('<script src="https://mosparo.example/build/mosparo-frontend.js" defer></script>')
+            ->toContain('<script src="https://mosparo.example/build/mosparo-frontend.js?v=20261024" defer></script>')
             ->toContain('window.laravelMosparo = { start };');
     });
 
@@ -40,13 +42,22 @@ describe('@mosparoScript', function () {
         newsletterBox();
 
         expect(Blade::render("@mosparoScript('newsletter')"))
-            ->toContain('src="https://newsletter.example/build/mosparo-frontend.js"');
+            ->toContain('src="https://newsletter.example/build/mosparo-frontend.js?v=');
     });
 
     it('renders nothing when switched off', function () {
         config()->set('mosparo.enabled', false);
 
         expect(trim(Blade::render('@mosparoScript')))->toBe('');
+    });
+
+    it('asks for mosparo\'s frontend anew every day, as mosparo lets browsers keep it for years', function () {
+        $this->travelTo('2026-10-24 23:59');
+        $today = Blade::render('@mosparoScript');
+
+        $this->travelTo('2026-10-25 00:01');
+
+        expect(Blade::render('@mosparoScript'))->not->toBe($today)->toContain('mosparo-frontend.js?v=20261025');
     });
 
     it('carries the page\'s CSP nonce', function () {

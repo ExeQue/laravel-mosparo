@@ -340,11 +340,15 @@ class Project
 
         $nonce = Vite::cspNonce() === null ? '' : ' nonce="'.e(Vite::cspNonce()).'"';
 
+        // mosparo serves its frontend for ten years under one address, so a browser
+        // keeps the version it first saw through every upgrade of mosparo. The date
+        // in the address makes it fetch the current one at most a day later.
         return new HtmlString(sprintf(
-            '<script%1$s>%2$s</script>'."\n".'<script%1$s src="%3$s/build/mosparo-frontend.js" defer></script>',
+            '<script%1$s>%2$s</script>'."\n".'<script%1$s src="%3$s/build/mosparo-frontend.js?v=%4$s" defer></script>',
             $nonce,
             self::boxes(),
             e($this->host()),
+            now()->format('Ymd'),
         ));
     }
 
