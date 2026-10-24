@@ -89,4 +89,6 @@ Read on in the [documentation](docs/README.md).
 
 ## License
 
-MIT. See [LICENSE.md](LICENSE.md).
+The code is MIT; see [LICENSE.md](LICENSE.md).
+
+The cover shows Mo, the sparrow, by [mosparo](https://mosparo.io), licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). The cover and the other artwork in `art/` are CC BY-SA 4.0 as well; see [art/LICENSE.md](art/LICENSE.md). mosparo and Laravel do not endorse this package.

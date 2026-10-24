@@ -17,7 +17,6 @@ export default defineConfig({
     'workbench/**',
     'docker/**',
     'config/**',
-    'art/**',
   ],
 
   // README.md is the front page here, and stays the front page on GitHub.
@@ -84,6 +83,7 @@ export default defineConfig({
         text: 'Contributing',
         items: [
           { text: 'Contributing', link: '/CONTRIBUTING' },
+          { text: 'Artwork license', link: '/art/LICENSE' },
         ],
       },
     ],
