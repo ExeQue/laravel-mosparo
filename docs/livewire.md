@@ -45,7 +45,7 @@ The trait gives the component `$mosparo`, which holds the tokens the box sends a
 2. Returns `true` when mosparo is [disabled](switching-off.md).
 3. Checks the submission with mosparo. Missing tokens and a failed check both put the package's message on `mosparo.submitToken`, which `@mosparoError` shows.
 
-Once mosparo has seen the tokens, they are spent, whatever the answer. They are cleared, and the boxes in this component fetch new ones, so a form that failed for another reason, such as a wrong password, can be sent again.
+Once mosparo has seen the tokens, they are spent, whatever the answer. They are cleared, and the boxes in this component fetch new ones for the next submission.
 
 Pass `metadata:` to have mosparo keep it with the submission when the check passes. See [Reading data](data.md#metadata).
 

@@ -4,7 +4,7 @@
 
 **Documentation: [exeque.github.io/laravel-mosparo](https://exeque.github.io/laravel-mosparo/)**
 
-[mosparo](https://mosparo.io) spam protection for Laravel and Livewire. Put the box in a form with one directive, and check the submission with a validation rule, a Livewire trait or a facade, naming the fields mosparo must have checked. If a form fails for another reason, such as a wrong password, it can simply be sent again.
+[mosparo](https://mosparo.io) spam protection for Laravel and Livewire. Put the box in a form with one directive, and check the submission with a validation rule, a Livewire trait or a facade, naming the fields mosparo must have checked.
 
 ## Install
 
