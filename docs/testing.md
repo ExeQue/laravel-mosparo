@@ -37,7 +37,10 @@ A number decides that many checks, and the ones after go the other way. A sequen
 Mosparo::fake()->reject(1);                          // the first check is rejected, the rest accepted
 Mosparo::fake()->accept(2);                          // two checks are accepted, the rest rejected
 Mosparo::fake()->reject()->sequence(true, false);    // accepted, rejected, then rejected from there on
+Mosparo::fake()->accept()->sequence(false, false);   // rejected, rejected, then accepted from there on
 ```
+
+`sequence()` follows `accept()` or `reject()`, which decide the checks once the sequence is used up. On its own, `Mosparo::fake()->sequence(...)` falls back to accepting, the fake's default.
 
 A check without both tokens fails without using up the sequence.
 
