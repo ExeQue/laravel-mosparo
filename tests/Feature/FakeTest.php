@@ -52,18 +52,17 @@ it('decides a number of checks, then the opposite', function (string $method, ar
     'accepting two' => ['accept', [true, true, false, false]],
 ]);
 
-it('decides the next checks in sequence, then as before', function () {
-    $fake = Mosparo::fake()->reject()->sequence(true, false, true);
+it('reads a sequence with the word before it, then goes back to that word', function (Closure $fake, array $expected) {
+    $fake();
 
-    $outcomes = array_map(fn (): bool => Mosparo::passes([], 'submit', 'validation', []), range(1, 5));
+    $outcomes = array_map(fn (): bool => Mosparo::passes([], 'submit', 'validation', []), range(1, 4));
 
-    expect($outcomes)->toBe([true, false, true, false, false]);
-
-    $fake->accept()->sequence(false);
-
-    expect(Mosparo::passes([], 'submit', 'validation', []))->toBeFalse()
-        ->and(Mosparo::passes([], 'submit', 'validation', []))->toBeTrue();
-});
+    expect($outcomes)->toBe($expected);
+})->with([
+    'reject: rejected, accepted, then rejected' => [fn () => Mosparo::fake()->reject()->sequence(true, false), [false, true, false, false]],
+    'accept: rejected, accepted, then accepted' => [fn () => Mosparo::fake()->accept()->sequence(false, true), [false, true, true, true]],
+    'on its own: as after accept' => [fn () => Mosparo::fake()->sequence(false), [false, true, true, true]],
+]);
 
 it('leaves the sequence alone for a check without tokens', function () {
     Mosparo::fake()->reject(1);

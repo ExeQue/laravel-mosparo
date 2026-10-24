@@ -31,16 +31,21 @@ Mosparo::fake()->reject(fn (array $formData) => str_contains($formData['message'
 Mosparo::fake()->accept(fn (array $formData, string $project) => $project === 'newsletter');
 ```
 
-A number decides that many checks, and the ones after go the other way. A sequence decides the next checks in order - `true` accepts, `false` rejects - and the checks after it are decided as before:
+A number decides that many checks, and the ones after go the other way:
 
 ```php
-Mosparo::fake()->reject(1);                          // the first check is rejected, the rest accepted
-Mosparo::fake()->accept(2);                          // two checks are accepted, the rest rejected
-Mosparo::fake()->reject()->sequence(true, false);    // accepted, rejected, then rejected from there on
-Mosparo::fake()->accept()->sequence(false, true);    // rejected, accepted, then accepted from there on
+Mosparo::fake()->reject(1);  // the first check is rejected, the rest accepted
+Mosparo::fake()->accept(2);  // two checks are accepted, the rest rejected
 ```
 
-`sequence()` follows `accept()` or `reject()`, which decide the checks once the sequence is used up. On its own, `Mosparo::fake()->sequence(...)` falls back to accepting, the fake's default.
+A sequence decides the next checks in order, read with the word before it - `true` means "yes, reject" after `reject()` and "yes, accept" after `accept()`. Once the sequence is used up, that word decides the checks again:
+
+```php
+Mosparo::fake()->reject()->sequence(true, false);  // rejected, accepted, then rejected from there on
+Mosparo::fake()->accept()->sequence(false, true);  // rejected, accepted, then accepted from there on
+```
+
+On its own, `Mosparo::fake()->sequence(...)` reads like `accept()->sequence(...)`, accepting being the fake's default.
 
 A check without both tokens fails without using up the sequence.
 

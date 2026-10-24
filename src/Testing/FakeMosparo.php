@@ -41,11 +41,16 @@ class FakeMosparo extends Mosparo
     private Closure $decision;
 
     /**
-     * The outcomes of the next checks, used before $decision.
+     * Whether the next checks are accepted, used before $decision.
      *
      * @var list<bool>
      */
     private array $upcoming = [];
+
+    /**
+     * Whether the last word was reject(), so that sequence() reads true as rejected.
+     */
+    private bool $rejecting = false;
 
     private ?Statistics $statistics = null;
 
@@ -72,10 +77,11 @@ class FakeMosparo extends Mosparo
     public function accept(Closure|int|null $when = null): self
     {
         if (is_int($when)) {
-            return $this->reject()->sequence(...array_fill(0, max(0, $when), true));
+            return $this->reject()->upcoming(array_fill(0, max(0, $when), true));
         }
 
         $this->upcoming = [];
+        $this->rejecting = false;
         $this->decision = fn (array $formData, string $project): bool => $when === null || (bool) $when($formData, $project);
 
         return $this;
@@ -92,22 +98,33 @@ class FakeMosparo extends Mosparo
     public function reject(Closure|int|null $when = null): self
     {
         if (is_int($when)) {
-            return $this->accept()->sequence(...array_fill(0, max(0, $when), false));
+            return $this->accept()->upcoming(array_fill(0, max(0, $when), false));
         }
 
         $this->upcoming = [];
+        $this->rejecting = true;
         $this->decision = fn (array $formData, string $project): bool => $when !== null && ! $when($formData, $project);
 
         return $this;
     }
 
     /**
-     * Decides the next checks in order - true accepts, false rejects -
-     * after which the checks are decided as before.
+     * Decides the next checks in order, read with the word before it:
+     * after reject(), true rejects and false accepts; after accept() - or
+     * on its own - true accepts and false rejects. Once the sequence is used
+     * up, that word decides the checks again.
      */
     public function sequence(bool ...$outcomes): self
     {
-        $this->upcoming = array_values($outcomes);
+        return $this->upcoming(array_map(fn (bool $outcome): bool => $outcome !== $this->rejecting, array_values($outcomes)));
+    }
+
+    /**
+     * @param list<bool> $accepted Whether each of the next checks is accepted.
+     */
+    private function upcoming(array $accepted): self
+    {
+        $this->upcoming = $accepted;
 
         return $this;
     }
