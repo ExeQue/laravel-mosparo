@@ -31,9 +31,13 @@ Mosparo::fake()->reject(fn (array $formData) => str_contains($formData['message'
 Mosparo::fake()->accept(fn (array $formData, string $project) => $project === 'newsletter');
 ```
 
+The callback receives the fields the check was given: for `ValidMosparo`, everything that was posted; for `verify()` in Livewire, the form's fields.
+
 A check still needs both tokens. A plain form post sends them as fields:
 
 ```php
+Mosparo::fake()->reject();
+
 $this->post('/newsletter', [
     'email' => 'ada@example.com',
     '_mosparo_submitToken' => 'submit',
@@ -45,6 +49,8 @@ A Livewire component receives them the way the box sends them:
 
 ```php
 use ExeQue\Mosparo\Mosparo as MosparoManager;
+
+Mosparo::fake()->reject();
 
 Livewire::test(SignIn::class)
     ->dispatch(MosparoManager::CHECKED_EVENT, submitToken: 'submit', validationToken: 'validation')
@@ -67,7 +73,7 @@ $fake->assertNotChecked();
 $fake->assertMetadataStored(['user' => 42]);
 ```
 
-Every check, stored metadata and rule package change is also kept on the fake, in `$fake->checks`, `$fake->metadata` and `$fake->rulePackageChanges`.
+Every check, stored metadata and rule package change is also kept on the fake, in `$fake->checks`, `$fake->metadata` and `$fake->rulePackageChanges`. A check holds `project`, `formData`, `fields` and whether it `passed`.
 
 ## Data
 

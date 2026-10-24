@@ -45,7 +45,7 @@ The component takes a few attributes:
 | Attribute | Default | |
 | --- | --- | --- |
 | `project` | the default project | Which [project](projects.md) the box belongs to. |
-| `id` | a random id | The box element's id. |
+| `id` | generated | The box element's id. In a Livewire component it stays the same between renders, so Livewire keeps the box. |
 | `options` | `[]` | [Options for mosparo's frontend](https://documentation.mosparo.io/docs/integration/custom/#options), such as `language` or `forceInvisible`. Plain values only - callbacks cannot be passed. |
 | anything else | | Added to the box element. |
 

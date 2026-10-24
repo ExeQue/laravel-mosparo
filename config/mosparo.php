@@ -35,7 +35,7 @@ return [
     | Client arguments
     |--------------------------------------------------------------------------
     |
-    | Guzzle options for the verification request, for every project. A
+    | Guzzle options for every request to mosparo, for every project. A
     | project's own client_arguments are merged over these. Add
     | 'verify' => false for a local mosparo with a self-signed certificate.
     |
@@ -81,8 +81,8 @@ return [
     |
     | One entry per mosparo project, with the uuid and keys from the project's
     | settings in mosparo. Name a project at the box and at the check:
-    | @mosparo('newsletter'), new ValidMosparo('newsletter') or
-    | $this->mosparo->verify($this->form, 'newsletter').
+    | @mosparo('newsletter'), new ValidMosparo(['email'], project: 'newsletter')
+    | or $this->mosparo->verify($this->form, ['email'], 'newsletter').
     |
     */
 

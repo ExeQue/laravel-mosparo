@@ -8,3 +8,4 @@
 4. The tokens are now spent.
    - After a plain post, the page reloads and the box starts again.
    - In Livewire, the check dispatches `mosparo-reset`, and the boxes of that component ask for a new submit token.
+   - A page the browser restores from its back/forward cache asks for new tokens as well.

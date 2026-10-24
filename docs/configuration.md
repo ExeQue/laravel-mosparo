@@ -10,7 +10,7 @@ php artisan vendor:publish --tag=mosparo-config
 | --- | --- | --- | --- |
 | `enabled` | `MOSPARO_ENABLED` | `true` | Disabled, every check passes and nothing is rendered. See [Disabling mosparo](switching-off.md). |
 | `host` | `MOSPARO_HOST` | | The mosparo installation, for every project: its origin, such as `https://mosparo.example.com`, without a path. |
-| `client_arguments` | `MOSPARO_TIMEOUT` | `['timeout' => 10]` | Guzzle options for the verification request, for every project. Add `'verify' => false` for a local mosparo with a self-signed certificate. |
+| `client_arguments` | `MOSPARO_TIMEOUT` | `['timeout' => 10]` | Guzzle options for every request to mosparo, for every project. Add `'verify' => false` for a local mosparo with a self-signed certificate. |
 | `cache.enabled` | `MOSPARO_CACHE` | `false` | Whether what is read from mosparo is cached. See [Caching](caching.md). |
 | `cache.store` | `MOSPARO_CACHE_STORE` | the default store | |
 | `cache.ttl` | `MOSPARO_CACHE_TTL` | `300` | Seconds an entry is kept. |
