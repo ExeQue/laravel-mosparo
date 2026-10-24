@@ -41,6 +41,44 @@ it('decides check by check with a callback', function (string $method, string $m
     'rejecting what does not match' => ['accept', 'Hello', false],
 ]);
 
+it('decides a number of checks, then the opposite', function (string $method, array $expected) {
+    Mosparo::fake()->{$method}(2);
+
+    $outcomes = array_map(fn (): bool => Mosparo::passes([], 'submit', 'validation', []), range(1, 4));
+
+    expect($outcomes)->toBe($expected);
+})->with([
+    'rejecting two' => ['reject', [false, false, true, true]],
+    'accepting two' => ['accept', [true, true, false, false]],
+]);
+
+it('decides the next checks in sequence, then as before', function () {
+    $fake = Mosparo::fake()->reject()->sequence(true, false, true);
+
+    $outcomes = array_map(fn (): bool => Mosparo::passes([], 'submit', 'validation', []), range(1, 5));
+
+    expect($outcomes)->toBe([true, false, true, false, false]);
+
+    $fake->accept()->sequence(false);
+
+    expect(Mosparo::passes([], 'submit', 'validation', []))->toBeFalse()
+        ->and(Mosparo::passes([], 'submit', 'validation', []))->toBeTrue();
+});
+
+it('leaves the sequence alone for a check without tokens', function () {
+    Mosparo::fake()->reject(1);
+
+    expect(Mosparo::passes([], null, 'validation', []))->toBeFalse()
+        ->and(Mosparo::passes([], 'submit', 'validation', []))->toBeFalse()
+        ->and(Mosparo::passes([], 'submit', 'validation', []))->toBeTrue();
+});
+
+it('drops a sequence when told to accept or reject everything', function () {
+    Mosparo::fake()->sequence(false, false)->accept();
+
+    expect(Mosparo::passes([], 'submit', 'validation', []))->toBeTrue();
+});
+
 it('still needs both tokens', function () {
     Mosparo::fake();
 

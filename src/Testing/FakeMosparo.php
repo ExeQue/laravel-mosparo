@@ -40,6 +40,13 @@ class FakeMosparo extends Mosparo
      */
     private Closure $decision;
 
+    /**
+     * The outcomes of the next checks, used before $decision.
+     *
+     * @var list<bool>
+     */
+    private array $upcoming = [];
+
     private ?Statistics $statistics = null;
 
     /**
@@ -55,27 +62,52 @@ class FakeMosparo extends Mosparo
     }
 
     /**
-     * Accepts every check that has both tokens - the default. With a
-     * callback, accepts the checks it returns true for and rejects the rest.
+     * Accepts every check that has both tokens - the default.
      *
-     * @param (Closure(array<array-key, mixed> $formData, string $project): bool)|null $when
+     * - With a callback, accepts the checks it returns true for and rejects the rest.
+     * - With a number, accepts that many checks and rejects the ones after.
+     *
+     * @param (Closure(array<array-key, mixed> $formData, string $project): bool)|int|null $when
      */
-    public function accept(?Closure $when = null): self
+    public function accept(Closure|int|null $when = null): self
     {
+        if (is_int($when)) {
+            return $this->reject()->sequence(...array_fill(0, max(0, $when), true));
+        }
+
+        $this->upcoming = [];
         $this->decision = fn (array $formData, string $project): bool => $when === null || (bool) $when($formData, $project);
 
         return $this;
     }
 
     /**
-     * Rejects every check, as mosparo does with spam. With a callback,
-     * rejects the checks it returns true for and accepts the rest.
+     * Rejects every check, as mosparo does with spam.
      *
-     * @param (Closure(array<array-key, mixed> $formData, string $project): bool)|null $when
+     * - With a callback, rejects the checks it returns true for and accepts the rest.
+     * - With a number, rejects that many checks and accepts the ones after.
+     *
+     * @param (Closure(array<array-key, mixed> $formData, string $project): bool)|int|null $when
      */
-    public function reject(?Closure $when = null): self
+    public function reject(Closure|int|null $when = null): self
     {
+        if (is_int($when)) {
+            return $this->accept()->sequence(...array_fill(0, max(0, $when), false));
+        }
+
+        $this->upcoming = [];
         $this->decision = fn (array $formData, string $project): bool => $when !== null && ! $when($formData, $project);
+
+        return $this;
+    }
+
+    /**
+     * Decides the next checks in order - true accepts, false rejects -
+     * after which the checks are decided as before.
+     */
+    public function sequence(bool ...$outcomes): self
+    {
+        $this->upcoming = array_values($outcomes);
 
         return $this;
     }
@@ -87,7 +119,7 @@ class FakeMosparo extends Mosparo
      */
     public function accepts(array $formData, string $project): bool
     {
-        return ($this->decision)($formData, $project);
+        return array_shift($this->upcoming) ?? ($this->decision)($formData, $project);
     }
 
     public function project(?string $name = null): Project
