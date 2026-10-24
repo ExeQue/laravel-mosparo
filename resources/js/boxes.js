@@ -11,6 +11,13 @@
     const started = new Set();
     const componentOf = (box) => box.closest('[wire\\:id]')?.getAttribute('wire:id');
 
+    // Older versions of mosparo's frontend have no getters for the tokens, and a
+    // browser may still have one cached; the hidden fields hold them in every version.
+    const tokensOf = (instance) => ({
+        submitToken: instance.getSubmitToken?.() ?? instance.submitTokenElement?.value ?? '',
+        validationToken: instance.getValidationToken?.() ?? instance.validationTokenElement?.value ?? '',
+    });
+
     function startBox(box) {
         if (box.mosparo || typeof mosparo === 'undefined') {
             return;
@@ -33,10 +40,7 @@
                     return;
                 }
 
-                window.Livewire?.find(component)?.dispatchSelf('mosparo-checked', {
-                    submitToken: box.mosparo.getSubmitToken(),
-                    validationToken: box.mosparo.getValidationToken(),
-                });
+                window.Livewire?.find(component)?.dispatchSelf('mosparo-checked', tokensOf(box.mosparo));
             },
         });
 
