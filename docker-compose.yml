@@ -1,0 +1,49 @@
+# Without lerd: `docker compose run --rm composer install`, then
+# `docker compose up serve mosparo` and open http://localhost:8000.
+services:
+  php:
+    build:
+      context: ./docker
+    volumes:
+      - .:/var/www/html
+    environment:
+      - XDEBUG_MODE=coverage
+  composer:
+    extends:
+      service: php
+    volumes:
+      - .:/var/www/html
+      - ~/.cache/composer:/.composer/cache
+    entrypoint: [ "composer" ]
+  testbench:
+    extends:
+      service: php
+    volumes:
+      - .:/var/www/html
+    entrypoint: [ "vendor/bin/testbench" ]
+  serve:
+    extends:
+      service: php
+    volumes:
+      - .:/var/www/html
+    environment:
+      - COMPOSER_HOME=/tmp/composer
+      - MOSPARO_HOST=http://localhost:8088
+      - MOSPARO_UUID=workbench
+      - MOSPARO_PUBLIC_KEY=workbench-public
+      - MOSPARO_PRIVATE_KEY=workbench-private
+    ports:
+      - "8000:8000"
+    entrypoint: [ "composer", "serve" ]
+  mosparo:
+    image: mosparo/mosparo:v1.5.12-alpine
+    ports:
+      - "8088:80"
+    volumes:
+      - mosparo-data:/mosparo-data
+      - ./docker/mosparo/setup.php:/workbench/setup.php:ro
+      - ./docker/mosparo/zz_workbench.yaml:/mosparo/config/packages/zz_workbench.yaml:ro
+    entrypoint: [ "sh", "-c", "php /workbench/setup.php && chown -R www-data /mosparo-data && exec /usr/bin/run" ]
+
+volumes:
+  mosparo-data:

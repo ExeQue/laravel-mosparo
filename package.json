@@ -1,0 +1,18 @@
+{
+  "name": "laravel-mosparo-docs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "docs:dev": "vitepress dev .",
+    "docs:build": "vitepress build .",
+    "docs:preview": "vitepress preview ."
+  },
+  "devDependencies": {
+    "vitepress": "^1.6.4",
+    "vite": "^6.4.3"
+  },
+  "overrides": {
+    "vite": "$vite",
+    "esbuild": "^0.25.0"
+  }
+}

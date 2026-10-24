@@ -1,0 +1,5 @@
+# setup.php renders the project's stylesheet through this otherwise private service.
+services:
+    workbench.design_helper:
+        alias: Mosparo\Helper\DesignHelper
+        public: true

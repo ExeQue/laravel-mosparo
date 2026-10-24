@@ -1,0 +1,84 @@
+{
+    "name": "exeque/laravel-mosparo",
+    "description": "mosparo spam protection for Laravel and Livewire: a configured client, a validation rule, a Blade box and a Livewire form that asks for fresh tokens after every check.",
+    "type": "library",
+    "license": "MIT",
+    "minimum-stability": "stable",
+    "keywords": [
+        "laravel",
+        "livewire",
+        "mosparo",
+        "spam",
+        "captcha"
+    ],
+    "authors": [
+        {
+            "name": "Morten Harders",
+            "email": "mmh@harders-it.dk"
+        }
+    ],
+    "require": {
+        "php": "^8.4",
+        "illuminate/contracts": "^13.0",
+        "illuminate/support": "^13.0",
+        "illuminate/validation": "^13.0",
+        "illuminate/view": "^13.0",
+        "mosparo/php-api-client": "^2.0"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.21",
+        "livewire/livewire": "^4.0",
+        "orchestra/testbench": "^11.3",
+        "pestphp/pest": "^5.0"
+    },
+    "suggest": {
+        "livewire/livewire": "Required for MosparoForm and the InteractsWithMosparo trait."
+    },
+    "autoload": {
+        "psr-4": {
+            "ExeQue\\Mosparo\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/",
+            "Workbench\\App\\": "workbench/app/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "ExeQue\\Mosparo\\MosparoServiceProvider"
+            ],
+            "aliases": {
+                "Mosparo": "ExeQue\\Mosparo\\Facades\\Mosparo"
+            }
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/pest -p",
+        "lint": "vendor/bin/pint -p",
+        "lint:test": "vendor/bin/pint -p --test",
+        "pre-commit": [
+            "@composer lint",
+            "@composer test"
+        ],
+        "post-autoload-dump": [
+            "@clear",
+            "@prepare"
+        ],
+        "clear": "@php vendor/bin/testbench package:purge-skeleton --ansi",
+        "prepare": "@php vendor/bin/testbench package:discover --ansi",
+        "test:coverage": "vendor/bin/pest -p --coverage --min=100",
+        "serve": [
+            "Composer\\Config::disableProcessTimeout",
+            "@php vendor/bin/testbench serve --ansi --host=0.0.0.0 --port=8000"
+        ]
+    }
+}
