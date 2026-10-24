@@ -23,6 +23,32 @@ final readonly class Statistics
     ) {
     }
 
+    /**
+     * @param array{validSubmissions: int, spamSubmissions: int, lastSubmissionAt: ?string, days: array<string, array{date: string, validSubmissions: int, spamSubmissions: int, delayedRequests: int, blockedRequests: int}>} $statistics
+     */
+    public static function fromArray(array $statistics): self
+    {
+        return new self(
+            $statistics['validSubmissions'],
+            $statistics['spamSubmissions'],
+            $statistics['lastSubmissionAt'] === null ? null : CarbonImmutable::parse($statistics['lastSubmissionAt']),
+            array_map(StatisticsDay::fromArray(...), $statistics['days']),
+        );
+    }
+
+    /**
+     * @return array{validSubmissions: int, spamSubmissions: int, lastSubmissionAt: ?string, days: array<string, array{date: string, validSubmissions: int, spamSubmissions: int, delayedRequests: int, blockedRequests: int}>}
+     */
+    public function toArray(): array
+    {
+        return [
+            'validSubmissions' => $this->validSubmissions,
+            'spamSubmissions' => $this->spamSubmissions,
+            'lastSubmissionAt' => $this->lastSubmissionAt?->toIso8601String(),
+            'days' => array_map(fn (StatisticsDay $day): array => $day->toArray(), $this->days),
+        ];
+    }
+
     public static function from(StatisticResult $result): self
     {
         $days = [];

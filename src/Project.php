@@ -20,7 +20,7 @@ use ExeQue\Mosparo\Exceptions\IncompleteProject;
 use ExeQue\Mosparo\Exceptions\MosparoException;
 use ExeQue\Mosparo\Exceptions\RequestFailed;
 use ExeQue\Mosparo\Support\FormData;
-use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Exception\ConnectException;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\HtmlString;
 use Mosparo\ApiClient\Client;
@@ -167,7 +167,7 @@ class Project
      * Submissions per day: valid and spam, in total and by date. Cached when
      * caching is on.
      *
-     * @param int $days The number of days back; every day mosparo keeps when 0.
+     * @param int $days The number of days back, counting today; every day mosparo keeps when 0.
      * @param DateTimeInterface|null $from The first day, instead of counting back.
      *
      * @throws ConnectionFailed When mosparo cannot be reached.
@@ -175,12 +175,13 @@ class Project
      */
     public function statistics(int $days = 0, ?DateTimeInterface $from = null): Statistics
     {
-        return $this->cache->remember(
+        return Statistics::fromArray($this->cache->remember(
             "statistics:{$days}:{$from?->format('Y-m-d')}",
-            fn (): Statistics => $this->call(fn (Client $client): Statistics => Statistics::from(
-                $client->getStatisticByDate($days, $from === null ? null : DateTime::createFromInterface($from)),
-            )),
-        );
+            fn (): array => $this->call(fn (Client $client): Statistics => Statistics::from(
+                // mosparo takes the range in seconds, rounded up to whole days.
+                $client->getStatisticByDate($days * 86400, $from === null ? null : DateTime::createFromInterface($from)),
+            ))->toArray(),
+        ));
     }
 
     /**
@@ -191,12 +192,13 @@ class Project
      */
     public function rulePackageRules(int $rulePackageId, int $page = 1, int $perPage = 1000): RulePackageRules
     {
-        return $this->cache->remember(
+        return RulePackageRules::fromArray($this->cache->remember(
             "rule-package:{$rulePackageId}:rules:{$page}:{$perPage}",
-            fn (): RulePackageRules => $this->call(fn (Client $client): RulePackageRules => RulePackageRules::from(
+            fn (): array => $this->call(fn (Client $client): RulePackageRules => RulePackageRules::from(
                 $client->getRulePackageRules($rulePackageId, $page, $perPage),
-            )),
-        );
+            ))->toArray(),
+            self::successful(...),
+        ));
     }
 
     /**
@@ -207,12 +209,13 @@ class Project
      */
     public function rulePackageRuleItems(int $rulePackageId, int $ruleId, int $page = 1, int $perPage = 1000): RulePackageRuleItems
     {
-        return $this->cache->remember(
+        return RulePackageRuleItems::fromArray($this->cache->remember(
             "rule-package:{$rulePackageId}:rules:{$ruleId}:items:{$page}:{$perPage}",
-            fn (): RulePackageRuleItems => $this->call(fn (Client $client): RulePackageRuleItems => RulePackageRuleItems::from(
+            fn (): array => $this->call(fn (Client $client): RulePackageRuleItems => RulePackageRuleItems::from(
                 $client->getRulePackageRulesRuleItems($rulePackageId, $ruleId, $page, $perPage),
-            )),
-        );
+            ))->toArray(),
+            self::successful(...),
+        ));
     }
 
     /**
@@ -227,12 +230,23 @@ class Project
      */
     public function streamRulePackageHashIndex(int $rulePackageId, SplFileObject $target, ?callable $progress = null): bool
     {
-        return $this->call(fn (Client $client): bool => $client->streamRulePackageHashIndex(
-            $rulePackageId,
-            $target,
-            $progress ?? static function (): void {
-            },
-        ));
+        $callbackFailure = null;
+
+        $report = function (int $bytes) use ($progress, &$callbackFailure): void {
+            try {
+                if ($progress !== null) {
+                    $progress($bytes);
+                }
+            } catch (Throwable $exception) {
+                throw $callbackFailure = $exception;
+            }
+        };
+
+        try {
+            return $this->call(fn (Client $client): bool => $client->streamRulePackageHashIndex($rulePackageId, $target, $report));
+        } catch (RequestFailed $exception) {
+            throw $callbackFailure ?? $exception;
+        }
     }
 
     /**
@@ -353,12 +367,20 @@ class Project
         try {
             return $call($client);
         } catch (ClientException $exception) {
-            throw $exception->getPrevious() instanceof GuzzleException
+            throw $exception->getPrevious() instanceof ConnectException
                 ? ConnectionFailed::to($this->name, $exception)
                 : RequestFailed::refused($this->name, $exception);
         } catch (Throwable $exception) {
             throw RequestFailed::unexpected($this->name, $exception);
         }
+    }
+
+    /**
+     * @param array{successful: bool} $page
+     */
+    private static function successful(array $page): bool
+    {
+        return $page['successful'];
     }
 
     private function privateKey(): string

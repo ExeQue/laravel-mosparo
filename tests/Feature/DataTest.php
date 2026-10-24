@@ -56,7 +56,7 @@ describe('statistics', function () {
             ->spamSubmissions->toBe(3)
             ->lastSubmissionAt->toEqual(CarbonImmutable::parse('2026-10-24 09:21:08'))
             ->and($statistics->days['2026-10-24'])->toEqual(new StatisticsDay(CarbonImmutable::parse('2026-10-24'), 12, 3, 1, 2))
-            ->and($requests[0]->getUri()->getQuery())->toBe('range=7&startDate=2026-10-18');
+            ->and($requests[0]->getUri()->getQuery())->toBe('range=604800&startDate=2026-10-18');
     });
 
     it('has no last submission for a project nobody used', function () {
@@ -91,6 +91,15 @@ describe('statistics', function () {
 
         Mosparo::statistics();
     })->throws(RequestFailed::class, 'mosparo gave an unexpected answer for the project [default].');
+
+    it('throws when mosparo turns the keys away', function () {
+        config()->set('mosparo.projects.default.client_arguments.handler', fn ($request) => GuzzleHttp\Promise\Create::promiseFor(
+            new GuzzleHttp\Psr7\Response(401, [], '{"error":true,"errorMessage":"Unauthorized"}'),
+        ));
+        config()->set('mosparo.projects.default.client_arguments.http_errors', true);
+
+        Mosparo::statistics();
+    })->throws(RequestFailed::class, 'mosparo refused the request for the project [default]');
 
     it('throws when mosparo cannot be reached', function () {
         mosparoIsUnreachable();
@@ -145,6 +154,14 @@ describe('rule packages', function () {
 
         expect($target->fread(100))->toBe('abc123')->and($bytes)->toBe([6]);
     });
+
+    it('lets an exception from the progress callback through as it is', function () {
+        mosparoApi(['/api/v1/rule-package/3/hash-index' => ['abc123', '###END']]);
+
+        Mosparo::streamRulePackageHashIndex(3, new SplTempFileObject(), function () {
+            throw new LogicException('The application\'s own failure');
+        });
+    })->throws(LogicException::class, 'The application\'s own failure');
 
     it('imports a package', function () {
         mosparoApi(['/api/v1/rule-package/import' => ['successful' => true, 'verifiedHash' => true]]);

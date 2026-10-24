@@ -8,6 +8,7 @@ use Closure;
 use ExeQue\Mosparo\Data\RulePackageRuleItems;
 use ExeQue\Mosparo\Data\RulePackageRules;
 use ExeQue\Mosparo\Data\Statistics;
+use ExeQue\Mosparo\Exceptions\UnknownProject;
 use ExeQue\Mosparo\Mosparo;
 use ExeQue\Mosparo\Project;
 use PHPUnit\Framework\Assert;
@@ -49,7 +50,13 @@ class FakeMosparo extends Mosparo
 
     public function project(?string $name = null): Project
     {
-        return new FakeProject($name ?? (string) config('mosparo.default', 'default'), $this->passes, $this);
+        $name ??= (string) config('mosparo.default', 'default');
+
+        if (! is_array(config("mosparo.projects.{$name}"))) {
+            throw UnknownProject::named($name);
+        }
+
+        return new FakeProject($name, $this->passes, $this);
     }
 
     /**
@@ -82,11 +89,17 @@ class FakeMosparo extends Mosparo
         return $this;
     }
 
+    /**
+     * @internal What a FakeProject answers.
+     */
     public function statisticsFor(): Statistics
     {
         return $this->statistics ?? new Statistics(0, 0, null, []);
     }
 
+    /**
+     * @internal What a FakeProject answers.
+     */
     public function rulesFor(int $rulePackageId): RulePackageRules
     {
         $rules = $this->rulePackages["{$rulePackageId}"] ?? null;
@@ -94,6 +107,9 @@ class FakeMosparo extends Mosparo
         return $rules instanceof RulePackageRules ? $rules : new RulePackageRules(true, [], 1, 1);
     }
 
+    /**
+     * @internal What a FakeProject answers.
+     */
     public function ruleItemsFor(int $rulePackageId, int $ruleId): RulePackageRuleItems
     {
         $items = $this->rulePackages["{$rulePackageId}:{$ruleId}"] ?? null;

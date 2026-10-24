@@ -14,6 +14,7 @@ use ExeQue\Mosparo\Data\Statistics;
 use ExeQue\Mosparo\Data\Verification;
 use ExeQue\Mosparo\Enums\FieldStatus;
 use ExeQue\Mosparo\Project;
+use ExeQue\Mosparo\Support\FormData;
 use SplFileObject;
 
 /**
@@ -63,12 +64,13 @@ class FakeProject extends Project
 
     public function verify(array $formData, string $submitToken, string $validationToken): Verification
     {
+        $this->mosparo->checks[] = ['project' => $this->name, 'formData' => $formData, 'fields' => [], 'passed' => $this->result];
         $status = $this->result ? FieldStatus::Valid : FieldStatus::Invalid;
 
         return new Verification(
             $this->result,
             $this->result,
-            array_map(fn (): FieldStatus => $status, $formData),
+            array_map(fn (): FieldStatus => $status, FormData::prepare($formData)),
             [],
             null,
         );

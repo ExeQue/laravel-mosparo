@@ -6,13 +6,13 @@ namespace ExeQue\Mosparo\Cache;
 
 use Closure;
 use Illuminate\Contracts\Cache\Repository;
+use Illuminate\Support\Str;
 
 /**
- * Caches what a project reads from mosparo. Clearing touches nothing but
- * these entries: every key carries a generation number, kept in the shared
- * cache store, and clearing moves the generation on. Entries of an older
- * generation are no longer read and expire with their TTL. This works on
- * every cache store, also those without tags.
+ * Caches what a project reads from mosparo, as plain arrays. Clearing the
+ * cache, for one project or for all of them, affects only these entries:
+ * every key carries the current generation of its project and of the whole
+ * cache, and clearing gives that generation a new value.
  */
 final class ProjectCache
 {
@@ -20,7 +20,7 @@ final class ProjectCache
 
     /**
      * @param Repository $entries Where the project's entries are kept.
-     * @param Repository $generations Where the generation numbers are kept, shared by every project.
+     * @param Repository $generations Where the generations are kept, shared by every project.
      * @param int $ttl Seconds an entry is kept.
      */
     public function __construct(
@@ -41,22 +41,35 @@ final class ProjectCache
     }
 
     /**
-     * The cached value, or the callback's result, kept for the TTL. Calls the
-     * callback every time while caching is off.
+     * The cached value, or the callback's result. A result is kept for the
+     * TTL unless $keep turns it down. Calls the callback every time while
+     * caching is off.
      *
-     * @template T
+     * @param Closure(): array<array-key, mixed> $callback
+     * @param (Closure(array<array-key, mixed>): bool)|null $keep
      *
-     * @param Closure(): T $callback
-     *
-     * @return T
+     * @return array<array-key, mixed>
      */
-    public function remember(string $key, Closure $callback): mixed
+    public function remember(string $key, Closure $callback, ?Closure $keep = null): array
     {
         if (! $this->enabled) {
             return $callback();
         }
 
-        return $this->entries->remember($this->key($key), $this->ttl, $callback);
+        $key = $this->key($key);
+        $cached = $this->entries->get($key);
+
+        if (is_array($cached)) {
+            return $cached;
+        }
+
+        $value = $callback();
+
+        if ($keep === null || $keep($value)) {
+            $this->entries->put($key, $value, $this->ttl);
+        }
+
+        return $value;
     }
 
     /**
@@ -64,7 +77,7 @@ final class ProjectCache
      */
     public function flush(): void
     {
-        self::advance($this->generations, self::projectGeneration($this->project));
+        self::renew($this->generations, self::projectGeneration($this->project));
     }
 
     /**
@@ -72,16 +85,16 @@ final class ProjectCache
      */
     public static function flushAll(Repository $generations): void
     {
-        self::advance($generations, self::GENERATION);
+        self::renew($generations, self::GENERATION);
     }
 
     private function key(string $key): string
     {
         return sprintf(
-            'mosparo:%d:%s:%d:%s',
-            (int) $this->generations->get(self::GENERATION, 0),
+            'mosparo:%s:%s:%s:%s',
+            (string) $this->generations->get(self::GENERATION, '0'),
             $this->project,
-            (int) $this->generations->get(self::projectGeneration($this->project), 0),
+            (string) $this->generations->get(self::projectGeneration($this->project), '0'),
             $key,
         );
     }
@@ -91,9 +104,8 @@ final class ProjectCache
         return "mosparo:{$project}:generation";
     }
 
-    private static function advance(Repository $generations, string $key): void
+    private static function renew(Repository $generations, string $key): void
     {
-        $generations->add($key, 0);
-        $generations->increment($key);
+        $generations->forever($key, Str::random(16));
     }
 }

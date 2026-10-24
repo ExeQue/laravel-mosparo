@@ -27,10 +27,10 @@ it('still needs both tokens', function () {
 
 it('works through the rule, the Livewire form and the box', function () {
     Mosparo::fake(passes: false);
-    config()->set('mosparo.projects', []);
+    config()->set('mosparo.projects', ['default' => [], 'newsletter' => []]);
 
     expect(Validator::make(['_mosparo_submitToken' => 'a', '_mosparo_validationToken' => 'b'], [
-        '_mosparo_submitToken' => [new ValidMosparo([], project: 'anything')],
+        '_mosparo_submitToken' => [new ValidMosparo([], project: 'newsletter')],
     ])->fails())->toBeTrue()
         ->and(Blade::render('@mosparoScript @mosparo'))->toContain('data-mosparo=');
 
@@ -72,6 +72,7 @@ describe('the data API', function () {
 
     it('records what was changed', function () {
         $fake = Mosparo::fake();
+        config()->set('mosparo.projects.newsletter', []);
 
         expect(Mosparo::importRulePackage(3, '{}', 'hash'))->successful->toBeTrue()
             ->and(Mosparo::project('newsletter')->updateRulePackage(4, []))->successful->toBeTrue()
@@ -82,16 +83,24 @@ describe('the data API', function () {
     });
 
     it('answers a verification with its result', function (bool $passes, ExeQue\Mosparo\Enums\FieldStatus $status) {
-        Mosparo::fake($passes);
+        $fake = Mosparo::fake($passes);
 
-        expect(Mosparo::verify(['email' => 'ada@example.com'], 'submit', 'validation'))
+        expect(Mosparo::verify(['email' => 'ada@example.com', 'address' => ['city' => 'Aarhus']], 'submit', 'validation'))
             ->submittable->toBe($passes)
-            ->fields->toBe(['email' => $status]);
+            ->fields->toBe(['email' => $status, 'address[city]' => $status]);
+
+        $fake->assertChecked();
     })->with([
         [true, ExeQue\Mosparo\Enums\FieldStatus::Valid],
         [false, ExeQue\Mosparo\Enums\FieldStatus::Invalid],
     ]);
 });
+
+it('refuses a project that is not configured, as mosparo does', function () {
+    Mosparo::fake();
+
+    Mosparo::project('missing');
+})->throws(ExeQue\Mosparo\Exceptions\UnknownProject::class);
 
 describe('assertions', function () {
     it('asserts checks', function () {

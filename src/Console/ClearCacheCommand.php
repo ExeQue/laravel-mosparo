@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ExeQue\Mosparo\Console;
 
+use ExeQue\Mosparo\Exceptions\UnknownProject;
 use ExeQue\Mosparo\Mosparo;
 use Illuminate\Console\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -18,7 +19,13 @@ class ClearCacheCommand extends Command
     {
         $project = $this->argument('project');
 
-        $mosparo->flushCache($project);
+        try {
+            $mosparo->flushCache($project);
+        } catch (UnknownProject $exception) {
+            $this->components->error($exception->getMessage());
+
+            return self::FAILURE;
+        }
 
         $this->components->info($project === null
             ? 'Cleared the mosparo cache of every project.'

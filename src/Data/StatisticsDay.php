@@ -21,6 +21,34 @@ final readonly class StatisticsDay
     }
 
     /**
+     * @param array{date: string, validSubmissions: int, spamSubmissions: int, delayedRequests: int, blockedRequests: int} $day
+     */
+    public static function fromArray(array $day): self
+    {
+        return new self(
+            CarbonImmutable::parse($day['date']),
+            $day['validSubmissions'],
+            $day['spamSubmissions'],
+            $day['delayedRequests'],
+            $day['blockedRequests'],
+        );
+    }
+
+    /**
+     * @return array{date: string, validSubmissions: int, spamSubmissions: int, delayedRequests: int, blockedRequests: int}
+     */
+    public function toArray(): array
+    {
+        return [
+            'date' => $this->date->toDateString(),
+            'validSubmissions' => $this->validSubmissions,
+            'spamSubmissions' => $this->spamSubmissions,
+            'delayedRequests' => $this->delayedRequests,
+            'blockedRequests' => $this->blockedRequests,
+        ];
+    }
+
+    /**
      * @param array<string, mixed> $numbers
      */
     public static function from(string $date, array $numbers): self

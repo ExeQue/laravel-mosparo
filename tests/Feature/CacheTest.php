@@ -149,6 +149,12 @@ describe('clearing', function () {
         expect(Mosparo::statistics()->validSubmissions)->toBe(2);
     });
 
+    it('refuses to clear a project that is not configured', function () {
+        $this->artisan('mosparo:clear-cache', ['project' => 'missing'])
+            ->expectsOutputToContain('The mosparo project [missing] is not configured.')
+            ->assertFailed();
+    });
+
     it('is cleared from the console', function (array $arguments, string $output) {
         $requests = mosparoApi(['/api/v1/statistic/by-date' => [statisticsBody(1), statisticsBody(2)]]);
 
@@ -161,6 +167,29 @@ describe('clearing', function () {
         'every project' => [[], 'Cleared the mosparo cache of every project.'],
         'one project' => [['project' => 'default'], 'Cleared the mosparo cache of the [default] project.'],
     ]);
+});
+
+it('keeps working when the cache may not restore objects', function () {
+    config()->set('cache.stores.array.serialize', true);
+    config()->set('cache.serializable_classes', false);
+    Cache::forgetDriver('array');
+    mosparoApi(['/api/v1/statistic/by-date' => [statisticsBody(1)]]);
+
+    Mosparo::statistics();
+
+    expect(Mosparo::statistics()->validSubmissions)->toBe(1);
+});
+
+it('does not keep a page mosparo did not deliver', function () {
+    $requests = mosparoApi(['/api/v1/rule-package/3/rules' => [
+        ['result' => false, 'page' => 1, 'totalPages' => 0, 'rules' => []],
+        ['result' => true, 'page' => 1, 'totalPages' => 1, 'rules' => []],
+    ]]);
+
+    expect(Mosparo::rulePackageRules(3)->successful)->toBeFalse()
+        ->and(Mosparo::rulePackageRules(3)->successful)->toBeTrue()
+        ->and(Mosparo::rulePackageRules(3)->successful)->toBeTrue()
+        ->and($requests)->toHaveCount(2);
 });
 
 it('never caches a check of a submission', function () {
