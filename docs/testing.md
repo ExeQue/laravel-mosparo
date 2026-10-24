@@ -21,7 +21,15 @@ Mosparo::fake();            // accepts every check
 Mosparo::fake()->reject();  // rejects every check, as mosparo does with spam
 ```
 
-`accept()` and `reject()` can be called on the fake at any point in a test.
+`accept()` and `reject()` can be called on the fake at any point in a test. Give either a callback to decide check by check, from the submitted fields and the project:
+
+```php
+// Rejects what looks like spam, accepts everything else.
+Mosparo::fake()->reject(fn (array $formData) => str_contains($formData['message'] ?? '', 'pills'));
+
+// Accepts the newsletter project only.
+Mosparo::fake()->accept(fn (array $formData, string $project) => $project === 'newsletter');
+```
 
 A check still needs both tokens. A plain form post sends them as fields:
 

@@ -35,7 +35,10 @@ class FakeMosparo extends Mosparo
      */
     public array $rulePackageChanges = [];
 
-    private bool $accepts = true;
+    /**
+     * @var Closure(array<array-key, mixed>, string): bool
+     */
+    private Closure $decision;
 
     private ?Statistics $statistics = null;
 
@@ -47,34 +50,44 @@ class FakeMosparo extends Mosparo
     public function __construct()
     {
         parent::__construct(app('config'), app('cache'));
+
+        $this->accept();
     }
 
     /**
-     * Accepts every check that has both tokens. The default.
+     * Accepts every check that has both tokens - the default. With a
+     * callback, accepts the checks it returns true for and rejects the rest.
+     *
+     * @param (Closure(array<array-key, mixed> $formData, string $project): bool)|null $when
      */
-    public function accept(): self
+    public function accept(?Closure $when = null): self
     {
-        $this->accepts = true;
+        $this->decision = fn (array $formData, string $project): bool => $when === null || (bool) $when($formData, $project);
 
         return $this;
     }
 
     /**
-     * Rejects every check, as mosparo does with spam.
+     * Rejects every check, as mosparo does with spam. With a callback,
+     * rejects the checks it returns true for and accepts the rest.
+     *
+     * @param (Closure(array<array-key, mixed> $formData, string $project): bool)|null $when
      */
-    public function reject(): self
+    public function reject(?Closure $when = null): self
     {
-        $this->accepts = false;
+        $this->decision = fn (array $formData, string $project): bool => $when !== null && ! $when($formData, $project);
 
         return $this;
     }
 
     /**
      * @internal Whether a FakeProject accepts a check.
+     *
+     * @param array<array-key, mixed> $formData
      */
-    public function accepts(): bool
+    public function accepts(array $formData, string $project): bool
     {
-        return $this->accepts;
+        return ($this->decision)($formData, $project);
     }
 
     public function project(?string $name = null): Project

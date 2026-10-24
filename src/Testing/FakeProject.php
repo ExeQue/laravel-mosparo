@@ -54,7 +54,7 @@ class FakeProject extends Project
     {
         $passed = is_string($submitToken) && $submitToken !== ''
             && is_string($validationToken) && $validationToken !== ''
-            && $this->mosparo->accepts();
+            && $this->mosparo->accepts($formData, $this->name);
 
         $this->mosparo->checks[] = ['project' => $this->name, 'formData' => $formData, 'fields' => $fields, 'passed' => $passed];
 
@@ -63,7 +63,7 @@ class FakeProject extends Project
 
     public function verify(array $formData, string $submitToken, string $validationToken): Verification
     {
-        $accepted = $this->mosparo->accepts();
+        $accepted = $this->mosparo->accepts($formData, $this->name);
         $this->mosparo->checks[] = ['project' => $this->name, 'formData' => $formData, 'fields' => [], 'passed' => $accepted];
         $status = $accepted ? FieldStatus::Valid : FieldStatus::Invalid;
 

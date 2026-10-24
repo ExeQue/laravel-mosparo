@@ -29,6 +29,18 @@ it('switches between accepting and rejecting', function () {
     expect(Mosparo::passes([], 'submit', 'validation', []))->toBeTrue();
 });
 
+it('decides check by check with a callback', function (string $method, string $message, bool $accepted) {
+    Mosparo::fake()->{$method}(fn (array $formData, string $project): bool => $project === 'default' && str_contains($formData['message'], 'pills'));
+
+    expect(Mosparo::passes(['message' => $message], 'submit', 'validation', []))->toBe($accepted)
+        ->and(Mosparo::verify(['message' => $message], 'submit', 'validation')->submittable)->toBe($accepted);
+})->with([
+    'rejecting what matches' => ['reject', 'Cheap pills', false],
+    'accepting what does not match' => ['reject', 'Hello', true],
+    'accepting what matches' => ['accept', 'Cheap pills', true],
+    'rejecting what does not match' => ['accept', 'Hello', false],
+]);
+
 it('still needs both tokens', function () {
     Mosparo::fake();
 
