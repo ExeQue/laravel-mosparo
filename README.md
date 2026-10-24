@@ -10,7 +10,7 @@
 <a href="LICENSE.md"><img src="https://img.shields.io/github/license/ExeQue/laravel-mosparo" alt="License"></a>
 </p>
 
-# laravel-mosparo
+# Laravel × mosparo
 
 **Documentation: [exeque.github.io/laravel-mosparo](https://exeque.github.io/laravel-mosparo/)**
 

@@ -4,7 +4,7 @@ import { defineConfig } from 'vitepress'
 // The markdown in this repository is the source: the site is a view of it, not a copy.
 // Everything links the same way on GitHub and on the site, so srcDir is the repository root.
 export default defineConfig({
-  title: 'laravel-mosparo',
+  title: 'Laravel × mosparo',
   description: 'mosparo spam protection for Laravel and Livewire.',
   base: '/laravel-mosparo/',
   lastUpdated: true,
