@@ -10,14 +10,24 @@ use Illuminate\Support\Facades\Validator;
 use Livewire\Livewire;
 use Tests\Fixtures\Livewire\Contact;
 
-it('answers checks with the result it was given, without asking mosparo', function (bool $passes) {
+it('accepts or rejects checks as told, without asking mosparo', function (bool $passes) {
     $requests = mosparoAnswers(valid: ! $passes);
-    $fake = Mosparo::fake($passes);
+    $fake = $passes ? Mosparo::fake() : Mosparo::fake()->reject();
 
     expect(Mosparo::passes(['email' => 'ada@example.com'], 'submit', 'validation', ['email']))->toBe($passes)
         ->and($requests)->toHaveCount(0)
         ->and($fake->checks)->toBe([['project' => 'default', 'formData' => ['email' => 'ada@example.com'], 'fields' => ['email'], 'passed' => $passes]]);
 })->with([true, false]);
+
+it('switches between accepting and rejecting', function () {
+    $fake = Mosparo::fake()->reject();
+
+    expect(Mosparo::passes([], 'submit', 'validation', []))->toBeFalse();
+
+    $fake->accept();
+
+    expect(Mosparo::passes([], 'submit', 'validation', []))->toBeTrue();
+});
 
 it('still needs both tokens', function () {
     Mosparo::fake();
@@ -26,7 +36,7 @@ it('still needs both tokens', function () {
 });
 
 it('works through the rule, the Livewire form and the box', function () {
-    Mosparo::fake(passes: false);
+    Mosparo::fake()->reject();
     config()->set('mosparo.projects', ['default' => [], 'newsletter' => []]);
 
     expect(Validator::make(['_mosparo_submitToken' => 'a', '_mosparo_validationToken' => 'b'], [
@@ -83,7 +93,7 @@ describe('the data API', function () {
     });
 
     it('answers a verification with its result', function (bool $passes, ExeQue\Mosparo\Enums\FieldStatus $status) {
-        $fake = Mosparo::fake($passes);
+        $fake = $passes ? Mosparo::fake() : Mosparo::fake()->reject();
 
         expect(Mosparo::verify(['email' => 'ada@example.com', 'address' => ['city' => 'Aarhus']], 'submit', 'validation'))
             ->submittable->toBe($passes)

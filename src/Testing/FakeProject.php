@@ -18,15 +18,14 @@ use ExeQue\Mosparo\Support\FormData;
 use SplFileObject;
 
 /**
- * A project answering from its FakeMosparo: checks with a fixed result, as
- * long as both tokens are there, and data with what the fake was given.
+ * A project answering from its FakeMosparo: checks as the fake is told to,
+ * as long as both tokens are there, and data with what the fake was given.
  * Everything it is asked is recorded on the fake.
  */
 class FakeProject extends Project
 {
     public function __construct(
         string $name,
-        private readonly bool $result,
         private readonly FakeMosparo $mosparo,
     ) {
         parent::__construct($name, [
@@ -55,7 +54,7 @@ class FakeProject extends Project
     {
         $passed = is_string($submitToken) && $submitToken !== ''
             && is_string($validationToken) && $validationToken !== ''
-            && $this->result;
+            && $this->mosparo->accepts();
 
         $this->mosparo->checks[] = ['project' => $this->name, 'formData' => $formData, 'fields' => $fields, 'passed' => $passed];
 
@@ -64,12 +63,13 @@ class FakeProject extends Project
 
     public function verify(array $formData, string $submitToken, string $validationToken): Verification
     {
-        $this->mosparo->checks[] = ['project' => $this->name, 'formData' => $formData, 'fields' => [], 'passed' => $this->result];
-        $status = $this->result ? FieldStatus::Valid : FieldStatus::Invalid;
+        $accepted = $this->mosparo->accepts();
+        $this->mosparo->checks[] = ['project' => $this->name, 'formData' => $formData, 'fields' => [], 'passed' => $accepted];
+        $status = $accepted ? FieldStatus::Valid : FieldStatus::Invalid;
 
         return new Verification(
-            $this->result,
-            $this->result,
+            $accepted,
+            $accepted,
             array_map(fn (): FieldStatus => $status, FormData::prepare($formData)),
             [],
             null,

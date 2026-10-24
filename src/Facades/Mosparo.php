@@ -36,12 +36,13 @@ use Illuminate\Support\Facades\Facade;
 class Mosparo extends Facade
 {
     /**
-     * Answers every check with $passes, without asking mosparo. Checks still
-     * need both tokens; the recorded checks are on the returned fake.
+     * Answers every check without asking mosparo: accepted, until
+     * `reject()` is called on the returned fake. Checks still need both
+     * tokens; the fake records them and offers assertions.
      */
-    public static function fake(bool $passes = true): FakeMosparo
+    public static function fake(): FakeMosparo
     {
-        $fake = new FakeMosparo($passes);
+        $fake = new FakeMosparo();
 
         static::swap($fake);
 

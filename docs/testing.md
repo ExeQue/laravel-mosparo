@@ -12,13 +12,16 @@ Livewire forms are still validated, so the rest of your tests behave as before.
 
 ## Fake mosparo
 
-To test what happens when mosparo accepts or rejects a submission, fake it. Every project then renders a working box and answers checks with the result you give, without asking mosparo:
+To test what happens when mosparo accepts or rejects a submission, fake it. Every project then renders a working box and answers checks without asking mosparo - accepting them, until you tell it to reject:
 
 ```php
 use ExeQue\Mosparo\Facades\Mosparo;
 
-Mosparo::fake(passes: false);
+Mosparo::fake();            // accepts every check
+Mosparo::fake()->reject();  // rejects every check, as mosparo does with spam
 ```
+
+`accept()` and `reject()` can be called on the fake at any point in a test.
 
 A check still needs both tokens. A plain form post sends them as fields:
 

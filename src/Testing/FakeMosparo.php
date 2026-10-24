@@ -15,7 +15,7 @@ use PHPUnit\Framework\Assert;
 
 /**
  * Stands in for mosparo in an application's tests: every project is enabled,
- * renders a working box, answers checks with the given result and reads the
+ * renders a working box, accepts or rejects checks as told, and reads the
  * data it was given, all without asking mosparo. Installed by `Mosparo::fake()`.
  */
 class FakeMosparo extends Mosparo
@@ -35,6 +35,8 @@ class FakeMosparo extends Mosparo
      */
     public array $rulePackageChanges = [];
 
+    private bool $accepts = true;
+
     private ?Statistics $statistics = null;
 
     /**
@@ -42,10 +44,37 @@ class FakeMosparo extends Mosparo
      */
     private array $rulePackages = [];
 
-    public function __construct(
-        private readonly bool $passes,
-    ) {
+    public function __construct()
+    {
         parent::__construct(app('config'), app('cache'));
+    }
+
+    /**
+     * Accepts every check that has both tokens. The default.
+     */
+    public function accept(): self
+    {
+        $this->accepts = true;
+
+        return $this;
+    }
+
+    /**
+     * Rejects every check, as mosparo does with spam.
+     */
+    public function reject(): self
+    {
+        $this->accepts = false;
+
+        return $this;
+    }
+
+    /**
+     * @internal Whether a FakeProject accepts a check.
+     */
+    public function accepts(): bool
+    {
+        return $this->accepts;
     }
 
     public function project(?string $name = null): Project
@@ -56,7 +85,7 @@ class FakeMosparo extends Mosparo
             throw UnknownProject::named($name);
         }
 
-        return new FakeProject($name, $this->passes, $this);
+        return new FakeProject($name, $this);
     }
 
     /**
