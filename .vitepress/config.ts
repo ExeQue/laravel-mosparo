@@ -34,6 +34,11 @@ export default defineConfig({
   // Mo and the cover are served from the art folder.
   vite: {
     publicDir: fileURLToPath(new URL('../art', import.meta.url)),
+    server: {
+      watch: {
+        ignored: ['**/vendor/**', '**/workbench/**', '**/tests/**', '**/.phpunit.cache/**'],
+      },
+    },
   },
 
   themeConfig: {
