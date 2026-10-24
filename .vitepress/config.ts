@@ -46,6 +46,8 @@ export default defineConfig({
           { text: 'Plain forms', link: '/docs/plain-forms' },
           { text: 'Livewire', link: '/docs/livewire' },
           { text: 'The facade', link: '/docs/facade' },
+          { text: 'Reading data', link: '/docs/data' },
+          { text: 'Caching', link: '/docs/caching' },
         ],
       },
       {

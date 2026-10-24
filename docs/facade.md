@@ -26,19 +26,22 @@ Mosparo::enabled();
 
 ## verify()
 
-For mosparo's full answer, use `verify()`. It throws `Mosparo\ApiClient\Exception` when mosparo cannot be reached:
+For mosparo's full answer, use `verify()`. It returns a read-only `Verification`, and throws when mosparo cannot be reached:
 
 ```php
-$result = Mosparo::verify($formData, $submitToken, $validationToken);
+use ExeQue\Mosparo\Enums\FieldStatus;
 
-$result->isSubmittable(); // valid, and signed by mosparo
-$result->getVerifiedFields();
-$result->getIssues();
+$verification = Mosparo::verify($formData, $submitToken, $validationToken);
+
+$verification->submittable;      // valid, and signed by mosparo
+$verification->fields;           // array<string, FieldStatus>
+$verification->field('message'); // FieldStatus::Valid, Invalid or NotVerified
+$verification->issues;
 ```
 
-## client()
+## Everything else
 
-`Mosparo::client()` returns mosparo's own [API client](https://github.com/mosparo/php-api-client) for the project, for statistics and rule packages.
+Statistics, rule packages and metadata are on [Reading data](data.md). `Mosparo::client()` returns mosparo's own [API client](https://github.com/mosparo/php-api-client) for anything this package does not wrap.
 
 ## Exceptions
 
@@ -46,5 +49,7 @@ Every exception the package throws implements `ExeQue\Mosparo\Exceptions\Mosparo
 
 | Exception | When |
 | --- | --- |
+| `ConnectionFailed` | mosparo cannot be reached. |
+| `RequestFailed` | mosparo refuses the request or answers something unexpected. `debugInformation` holds what mosparo adds in its debug mode. |
 | `UnknownProject` | A project name that is not configured. |
-| `IncompleteProject` | An enabled project without its host, uuid or a key. |
+| `IncompleteProject` | An enabled project without its host, uuid or a key, or with a host that has a path. |

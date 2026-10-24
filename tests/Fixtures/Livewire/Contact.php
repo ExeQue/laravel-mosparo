@@ -29,6 +29,11 @@ class Contact extends Component
         $this->sent = $this->mosparo->verify($this->form->validate(), []);
     }
 
+    public function sendWithMetadata(): void
+    {
+        $this->sent = $this->mosparo->verify($this->form, [], metadata: ['source' => 'contact']);
+    }
+
     public function sendMessage(): void
     {
         $this->sent = $this->mosparo->verify($this->form, ['message']);

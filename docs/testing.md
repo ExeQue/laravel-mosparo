@@ -43,12 +43,29 @@ Livewire::test(SignIn::class)
     ->assertHasErrors('mosparo.submitToken');
 ```
 
-The fake keeps every check it answered, with the project, the form data and the fields:
+## Asserting
 
 ```php
 $fake = Mosparo::fake();
 
 // ...
 
-expect($fake->checks)->toHaveCount(1);
+$fake->assertChecked();
+$fake->assertChecked(fn (array $check) => $check['formData']['email'] === 'ada@example.com');
+$fake->assertNotChecked();
+$fake->assertMetadataStored(['user' => 42]);
 ```
+
+Every check, stored metadata and rule package change is also kept on the fake, in `$fake->checks`, `$fake->metadata` and `$fake->rulePackageChanges`.
+
+## Data
+
+The fake answers [data calls](data.md) without asking mosparo: empty statistics and rule packages, unless you give it others:
+
+```php
+use ExeQue\Mosparo\Data\Statistics;
+
+Mosparo::fake()->withStatistics(new Statistics(validSubmissions: 12, spamSubmissions: 3, lastSubmissionAt: null, days: []));
+```
+
+`withRulePackageRules()` and `withRulePackageRuleItems()` do the same for rule packages.

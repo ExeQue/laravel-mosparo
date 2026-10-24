@@ -47,6 +47,8 @@ The trait gives the component `$mosparo`, which holds the tokens the box sends a
 
 Once mosparo has seen the tokens, they are spent, whatever the answer. They are cleared, and the boxes in this component fetch new ones, so a form that failed for another reason, such as a wrong password, can be sent again.
 
+Pass `metadata:` to have mosparo keep it with the submission when the check passes. See [Reading data](data.md#metadata).
+
 `$fields` works as for [plain forms](plain-forms.md#fields-mosparo-must-check): the check fails unless mosparo checked each listed field and found it valid.
 
 Give the Form string properties for the fields mosparo checks. The browser sends text, and a float or boolean property compares as something else.

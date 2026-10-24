@@ -48,3 +48,30 @@ function mosparoIsUnreachable(string $project = 'default'): void
         new ConnectException('Connection refused', $request),
     ));
 }
+
+/**
+ * Answers mosparo's data API by path, and returns the requests it received.
+ * A path given a list of bodies answers them in turn, the last one repeating.
+ *
+ * @param array<string, string|array<mixed>|list<string|array<mixed>>> $routes
+ *
+ * @return ArrayObject<int, RequestInterface>
+ */
+function mosparoApi(array $routes, string $project = 'default'): ArrayObject
+{
+    $requests = new ArrayObject();
+    $served = [];
+
+    config()->set("mosparo.projects.{$project}.client_arguments.handler", function (RequestInterface $request) use ($routes, $requests, &$served): PromiseInterface {
+        $requests[] = $request;
+        $path = $request->getUri()->getPath();
+        $bodies = $routes[$path] ?? ['error' => true, 'errorMessage' => "No route for {$path}"];
+        $bodies = is_array($bodies) && array_is_list($bodies) ? $bodies : [$bodies];
+        $served[$path] = ($served[$path] ?? -1) + 1;
+        $body = $bodies[min($served[$path], count($bodies) - 1)];
+
+        return Create::promiseFor(new Response(200, [], is_string($body) ? $body : (string) json_encode($body)));
+    });
+
+    return $requests;
+}

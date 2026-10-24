@@ -76,6 +76,7 @@ Mosparo::passes($formData, $submitToken, $validationToken, ['email', 'message'])
 
 ## Features
 
+- [Statistics, rule packages and metadata](docs/data.md) as read-only data objects, with [optional caching](docs/caching.md)
 - [Several mosparo projects](docs/projects.md) in one application, picked by name
 - [Disabled](docs/switching-off.md) with one env key, and [faked](docs/testing.md) in your tests
 - Visible and invisible boxes, started wherever they appear: Livewire updates, `wire:navigate`, the back button

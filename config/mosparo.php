@@ -47,6 +47,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Cache
+    |--------------------------------------------------------------------------
+    |
+    | Caches what is read from mosparo: statistics and rule packages. Checks
+    | of a submission are never cached. A project's own 'cache' settings are
+    | merged over these. Clear with `php artisan mosparo:clear-cache` or
+    | Mosparo::flushCache(), which touch nothing but mosparo's entries.
+    |
+    */
+
+    'cache' => [
+        'enabled' => (bool) env('MOSPARO_CACHE', false),
+        'store' => env('MOSPARO_CACHE_STORE'), // the default cache store when null
+        'ttl' => (int) env('MOSPARO_CACHE_TTL', 300),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Default project
     |--------------------------------------------------------------------------
     |
@@ -82,6 +100,7 @@ return [
         //     'public_key' => env('MOSPARO_NEWSLETTER_PUBLIC_KEY'),
         //     'private_key' => env('MOSPARO_NEWSLETTER_PRIVATE_KEY'),
         //     'client_arguments' => [], // merged over 'client_arguments' above
+        //     'cache' => ['ttl' => 60], // merged over 'cache' above
         // ],
 
     ],

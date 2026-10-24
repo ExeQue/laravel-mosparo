@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ExeQue\Mosparo;
 
+use ExeQue\Mosparo\Console\ClearCacheCommand;
 use ExeQue\Mosparo\Support\ErrorMessage;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
@@ -29,6 +30,8 @@ class MosparoServiceProvider extends ServiceProvider
         Blade::directive('mosparoError', $this->compileError(...));
 
         if ($this->app->runningInConsole()) {
+            $this->commands([ClearCacheCommand::class]);
+
             $this->publishes([__DIR__.'/../config/mosparo.php' => config_path('mosparo.php')], 'mosparo-config');
             $this->publishes([__DIR__.'/../lang' => $this->app->langPath('vendor/mosparo')], 'mosparo-lang');
         }

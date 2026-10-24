@@ -58,8 +58,9 @@ class MosparoForm extends Form
      * @param array<string, mixed>|Form $data The form, or the submitted fields keyed like the form's inputs.
      * @param list<string> $fields Fields that must have been part of mosparo's check.
      * @param string|null $project The project the form's box uses; the default when null.
+     * @param array<string, mixed> $metadata Stored with the submission in mosparo when it passes.
      */
-    public function verify(array|Form $data, array $fields, ?string $project = null): bool
+    public function verify(array|Form $data, array $fields, ?string $project = null, array $metadata = []): bool
     {
         if ($data instanceof Form) {
             $data->validate();
@@ -75,6 +76,10 @@ class MosparoForm extends Form
         $this->validate();
 
         $passes = $mosparo->passes($data, $this->submitToken, $this->validationToken, $fields);
+
+        if ($passes && $metadata !== []) {
+            rescue(fn (): bool => $mosparo->storeMetadata($this->submitToken, $this->validationToken, $metadata));
+        }
 
         $this->reset();
         $this->getComponent()->dispatch(Mosparo::RESET_EVENT, id: $this->getComponent()->getId());

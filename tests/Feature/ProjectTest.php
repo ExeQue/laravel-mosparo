@@ -2,15 +2,16 @@
 
 declare(strict_types=1);
 
+use ExeQue\Mosparo\Exceptions\ConnectionFailed;
 use ExeQue\Mosparo\Exceptions\IncompleteProject;
 use ExeQue\Mosparo\Exceptions\MosparoException;
+use ExeQue\Mosparo\Exceptions\RequestFailed;
 use ExeQue\Mosparo\Exceptions\UnknownProject;
 use ExeQue\Mosparo\Facades\Mosparo;
 use ExeQue\Mosparo\Project;
 use GuzzleHttp\Promise\Create;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Facades\Exceptions;
-use Mosparo\ApiClient\Exception as ClientException;
 
 function newsletterProject(array $overrides = []): void
 {
@@ -176,7 +177,7 @@ describe('checking a submission', function () {
 
         expect(Mosparo::passes(['email' => 'ada@example.com'], 'submit', 'validation', []))->toBeFalse();
 
-        Exceptions::assertReported(ClientException::class);
+        Exceptions::assertReported(ConnectionFailed::class);
     });
 
     it('fails and reports when mosparo answers nonsense', function () {
@@ -185,7 +186,7 @@ describe('checking a submission', function () {
 
         expect(Mosparo::passes(['email' => 'ada@example.com'], 'submit', 'validation', []))->toBeFalse();
 
-        Exceptions::assertReported(TypeError::class);
+        Exceptions::assertReported(RequestFailed::class);
     });
 
     it('asks the named project', function () {
@@ -196,13 +197,6 @@ describe('checking a submission', function () {
             ->and($requests)->toHaveCount(1);
     });
 
-    it('hands back the full result', function () {
-        mosparoAnswers();
-
-        expect(Mosparo::verify(['email' => 'ada@example.com'], 'submit', 'validation'))
-            ->isSubmittable()->toBeTrue()
-            ->isValid()->toBeTrue();
-    });
 });
 
 describe('fields that must be checked', function () {
