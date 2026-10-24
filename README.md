@@ -1,3 +1,5 @@
+<p align="center"><img src="./art/cover.jpg" alt="laravel-mosparo - spam protection for Laravel and Livewire, without the captcha" width="100%"></p>
+
 # laravel-mosparo
 
 **Documentation: [exeque.github.io/laravel-mosparo](https://exeque.github.io/laravel-mosparo/)**

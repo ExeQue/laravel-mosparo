@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitepress'
 
 // The markdown in this repository is the source: the site is a view of it, not a copy.
@@ -16,6 +17,7 @@ export default defineConfig({
     'workbench/**',
     'docker/**',
     'config/**',
+    'art/**',
   ],
 
   // README.md is the front page here, and stays the front page on GitHub.
@@ -24,7 +26,19 @@ export default defineConfig({
     'docs/README.md': 'docs/index.md',
   },
 
+  head: [
+    ['link', { rel: 'icon', type: 'image/png', href: '/laravel-mosparo/mo.png' }],
+    ['meta', { property: 'og:image', content: 'https://exeque.github.io/laravel-mosparo/cover.jpg' }],
+  ],
+
+  // Mo and the cover are served from the art folder.
+  vite: {
+    publicDir: fileURLToPath(new URL('../art', import.meta.url)),
+  },
+
   themeConfig: {
+    logo: '/mo.png',
+
     nav: [
       { text: 'Documentation', link: '/docs/' },
       { text: 'Packagist', link: 'https://packagist.org/packages/exeque/laravel-mosparo' },
