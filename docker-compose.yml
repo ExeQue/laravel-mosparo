@@ -32,6 +32,9 @@ services:
       - MOSPARO_UUID=workbench
       - MOSPARO_PUBLIC_KEY=workbench-public
       - MOSPARO_PRIVATE_KEY=workbench-private
+      - MOSPARO_VISIBLE_UUID=workbench-visible
+      - MOSPARO_VISIBLE_PUBLIC_KEY=workbench-visible-public
+      - MOSPARO_VISIBLE_PRIVATE_KEY=workbench-visible-private
     ports:
       - "8000:8000"
     entrypoint: [ "composer", "serve" ]

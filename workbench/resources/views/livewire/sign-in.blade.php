@@ -1,16 +1,19 @@
-<form wire:submit="signIn">
+<div>
     <h1>Livewire</h1>
+    <p class="lead">Sign in as <code>ada@example.com</code> with <code>password</code>. Try a wrong password first: the box fetches new tokens, and the next attempt goes through.</p>
 
-    <label>Email <input name="email" type="email" wire:model="email"></label>
-    <label>Password <input name="password" type="password" wire:model="password"></label>
+    <form class="card" wire:submit="signIn">
+        <label>Email <input name="email" type="email" wire:model="email" autocomplete="username"></label>
+        <label>Password <input name="password" type="password" wire:model="password" autocomplete="current-password"></label>
 
-    @mosparo
+        @mosparo
 
-    @error('mosparo.submitToken') <p class="error">{{ $message }}</p> @enderror
+        @mosparoError <p class="notice error">{{ $message }}</p> @enderror
 
-    <button type="submit">Sign in</button>
+        @if($result)
+            <p @class(['notice', 'success' => $signedIn, 'error' => ! $signedIn])>{{ $result }}</p>
+        @endif
 
-    @if($result)
-        <p class="result">{{ $result }}</p>
-    @endif
-</form>
+        <button type="submit" wire:loading.attr="disabled">Sign in</button>
+    </form>
+</div>

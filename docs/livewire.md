@@ -1,8 +1,6 @@
-<!-- Part of the laravel-mosparo documentation - see ../README.md -->
-
 # Livewire
 
-Use the `InteractsWithMosparo` trait and check before acting:
+Use the `InteractsWithMosparo` trait, and check before acting:
 
 ```php
 use ExeQue\Mosparo\Livewire\Concerns\InteractsWithMosparo;
@@ -16,7 +14,7 @@ class SignIn extends Component
 
     public function signIn(): void
     {
-        if (! $this->mosparo->verify($this->form)) {
+        if (! $this->mosparo->verify($this->form, fields: ['email'])) {
             return;
         }
 
@@ -31,21 +29,30 @@ class SignIn extends Component
     <input name="password" type="password" wire:model="form.password">
 
     @mosparo
-    @error('mosparo.submitToken') <p class="error">{{ $message }}</p> @enderror
+    @mosparoError <p class="error">{{ $message }}</p> @enderror
 
     <button type="submit">Sign in</button>
 </form>
 ```
 
-The trait adds two things to the component:
+The trait gives the component `$mosparo`, which holds the tokens the box sends after its check, and the listener that receives them.
 
-- `$mosparo`, a `MosparoForm` holding the tokens the box hands over.
-- `updateMosparo()`, which the box calls after its check.
+## What verify() does
 
-`verify()` takes a Livewire `Form` - it validates it first - or an array of already validated fields. Pass the project as the second argument when the box uses another one: `$this->mosparo->verify($this->form, 'newsletter')`.
+`$this->mosparo->verify($data, $project = null, $fields = [])`:
 
-When the form fails validation, mosparo is not asked and the tokens are kept. Once mosparo has been asked, the tokens are spent: they are cleared, and the box on that component fetches new ones, whatever the answer was.
+1. Validates `$data` when it is a Livewire `Form`. A form failing validation throws as usual, and the tokens are kept for the next try. `$data` can also be an array of fields you have already validated.
+2. Returns `true` when mosparo is [disabled](switching-off.md).
+3. Checks the submission with mosparo. Missing tokens and a failed check both put the package's message on `mosparo.submitToken`, which `@mosparoError` shows.
+
+Once mosparo has seen the tokens, they are spent, whatever the answer. They are cleared, and the boxes in this component fetch new ones, so a form that failed for another reason, such as a wrong password, can be sent again.
+
+`fields` works as for [plain forms](plain-forms.md#fields-mosparo-must-check): the check fails unless mosparo checked each listed field and found it valid.
 
 ## Which fields mosparo sees
 
-mosparo compares what the box saw with what the server sends, field by field. Give every input a `name` matching its key in the data you verify, as `name="email"` for `$form->email` above. The box leaves out passwords, hidden fields, checkboxes, radio buttons and files on its own.
+mosparo compares what the box saw with what the server sends, field by field. Give every input a `name` matching its key in the data you verify, such as `name="email"` for `$form->email`. Nested data matches bracketed names: `name="address[street]"` for `$form->address['street']`.
+
+## More than one form
+
+Each Livewire component has one `$mosparo`, so give each protected form its own component. Two boxes in one component share the tokens.

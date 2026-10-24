@@ -13,7 +13,7 @@ use Livewire\Component;
  * Signs in as "ada@example.com" with the password "password", so a wrong
  * password followed by the right one shows the box asking for new tokens.
  */
-#[Layout('layout')]
+#[Layout('layout', ['title' => 'Livewire'])]
 class SignIn extends Component
 {
     use InteractsWithMosparo;
@@ -24,6 +24,8 @@ class SignIn extends Component
 
     public ?string $result = null;
 
+    public bool $signedIn = false;
+
     public function signIn(): void
     {
         $data = $this->validate([
@@ -31,15 +33,17 @@ class SignIn extends Component
             'password' => ['required'],
         ]);
 
-        if (! $this->mosparo->verify($data)) {
-            $this->result = 'Stopped by mosparo.';
+        $this->result = null;
 
+        if (! $this->mosparo->verify($data, fields: ['email'])) {
             return;
         }
 
-        $this->result = $this->email === 'ada@example.com' && $this->password === 'password'
+        $this->signedIn = $this->email === 'ada@example.com' && $this->password === 'password';
+
+        $this->result = $this->signedIn
             ? 'Signed in.'
-            : 'Wrong email or password - try again, the spam check starts over.';
+            : 'Wrong email or password. Try again - the box is ready for another check.';
     }
 
     public function render(): View

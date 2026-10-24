@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ExeQue\Mosparo;
 
+use ExeQue\Mosparo\Support\ErrorMessage;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 
@@ -13,18 +14,18 @@ class MosparoServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../config/mosparo.php', 'mosparo');
 
-        $this->app->singleton(Mosparo::class);
+        $this->app->scoped(Mosparo::class);
     }
 
     public function boot(): void
     {
         $this->loadTranslationsFrom(__DIR__.'/../lang', 'mosparo');
-        $this->loadViewsFrom(__DIR__.'/../resources/views', 'mosparo');
 
         Blade::anonymousComponentPath(__DIR__.'/../resources/views/components');
 
         Blade::directive('mosparoScript', $this->compileScript(...));
         Blade::directive('mosparo', $this->compileBox(...));
+        Blade::directive('mosparoError', $this->compileError(...));
 
         if ($this->app->runningInConsole()) {
             $this->publishes([__DIR__.'/../config/mosparo.php' => config_path('mosparo.php')], 'mosparo-config');
@@ -33,14 +34,12 @@ class MosparoServiceProvider extends ServiceProvider
     }
 
     /**
-     * `@mosparoScript` or `@mosparoScript('newsletter')`: the project's
-     * stylesheet and mosparo's frontend script, for the page head.
+     * `@mosparoScript` or `@mosparoScript('newsletter')`: mosparo's frontend
+     * from the project's host, for the page head.
      */
     private function compileScript(string $project): string
     {
-        $project = $project === '' ? 'null' : $project;
-
-        return "<?php echo app(\\".Mosparo::class."::class)->project({$project})->script(); ?>";
+        return '<?php echo app(\\'.Mosparo::class.'::class)->project('.$this->projectExpression($project).')->script(); ?>';
     }
 
     /**
@@ -48,8 +47,23 @@ class MosparoServiceProvider extends ServiceProvider
      */
     private function compileBox(string $project): string
     {
-        $project = $project === '' ? 'null' : $project;
+        return "<?php echo \\Illuminate\\Support\\Facades\\Blade::render('<x-mosparo :project=\"\$project\" />', ['project' => ".$this->projectExpression($project).']); ?>';
+    }
 
-        return "<?php echo \\Illuminate\\Support\\Facades\\Blade::render('<x-mosparo :project=\"\$project\" />', ['project' => {$project}]); ?>";
+    /**
+     * `@mosparoError ... @enderror`: like `@error`, with the spam check's error
+     * in `$message`, from a Livewire component or a plain form. It opens the
+     * same way `@error` does, so Laravel's own `@enderror` closes it.
+     */
+    private function compileError(): string
+    {
+        return '<?php if (($__mosparoMessage = \\'.ErrorMessage::class.'::from($errors ?? null)) !== null) : '
+            .'if (isset($message)) { $__messageOriginal = $message; } '
+            .'$message = $__mosparoMessage; ?>';
+    }
+
+    private function projectExpression(string $project): string
+    {
+        return $project === '' ? 'null' : $project;
     }
 }

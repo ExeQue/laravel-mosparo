@@ -24,6 +24,7 @@ abstract class TestCase extends BaseTestCase
     protected function defineEnvironment($app): void
     {
         $app['config']->set('mosparo.enabled', true);
+        $app['config']->set('mosparo.host', 'https://mosparo.example');
         $app['config']->set('mosparo.projects.default.host', 'https://mosparo.example');
         $app['config']->set('mosparo.projects.default.uuid', 'project-uuid');
         $app['config']->set('mosparo.projects.default.public_key', 'public-key');

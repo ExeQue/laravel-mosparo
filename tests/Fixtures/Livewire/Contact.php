@@ -29,6 +29,11 @@ class Contact extends Component
         $this->sent = $this->mosparo->verify($this->form->validate());
     }
 
+    public function sendMessage(): void
+    {
+        $this->sent = $this->mosparo->verify($this->form, fields: ['message']);
+    }
+
     public function render(): string
     {
         return <<<'BLADE'
@@ -36,7 +41,7 @@ class Contact extends Component
                 <input name="email" wire:model="form.email">
                 <textarea name="message" wire:model="form.message"></textarea>
                 @mosparo
-                @error('mosparo.submitToken') <p>{{ $message }}</p> @enderror
+                @mosparoError <p>{{ $message }}</p> @enderror
             </form>
             BLADE;
     }

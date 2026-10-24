@@ -49,10 +49,10 @@ export default defineConfig({
         ],
       },
       {
-        text: 'Around it',
+        text: 'Advanced',
         items: [
           { text: 'Several projects', link: '/docs/projects' },
-          { text: 'Switching it off', link: '/docs/switching-off' },
+          { text: 'Disabling mosparo', link: '/docs/switching-off' },
           { text: 'Translations', link: '/docs/translations' },
           { text: 'Testing your application', link: '/docs/testing' },
           { text: 'Configuration', link: '/docs/configuration' },

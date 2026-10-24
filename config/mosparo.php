@@ -9,9 +9,10 @@ return [
     | Enabled
     |--------------------------------------------------------------------------
     |
-    | Switched off, every check passes and the box and script render nothing -
-    | for screenshots and local work without a mosparo instance. A project
-    | missing its host, uuid or keys is switched off on its own.
+    | When disabled, every check passes and the box and script render nothing:
+    | for local work without mosparo, tests and screenshots. When enabled, a
+    | project missing its host, uuid or a key throws an IncompleteProject
+    | exception instead of letting forms through.
     |
     */
 
@@ -22,12 +23,26 @@ return [
     | Host
     |--------------------------------------------------------------------------
     |
-    | The mosparo installation, shared by every project that names no host
-    | of its own.
+    | The mosparo installation, for every project that sets no host of its own.
     |
     */
 
     'host' => env('MOSPARO_HOST'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Client arguments
+    |--------------------------------------------------------------------------
+    |
+    | Guzzle options for the verification request, for every project. A
+    | project's own client_arguments are merged over these. Add
+    | 'verify' => false for a local mosparo with a self-signed certificate.
+    |
+    */
+
+    'client_arguments' => [
+        'timeout' => (int) env('MOSPARO_TIMEOUT', 10),
+    ],
 
     /*
     |--------------------------------------------------------------------------
@@ -45,14 +60,10 @@ return [
     | Projects
     |--------------------------------------------------------------------------
     |
-    | One entry per mosparo project, from the project's settings in mosparo.
-    | A project on another mosparo installation sets its own 'host'.
-    | Forms with their own rules or statistics get a project each, named in
-    | the form: @mosparo('newsletter'), new ValidMosparo('newsletter'),
+    | One entry per mosparo project, with the uuid and keys from the project's
+    | settings in mosparo. Name a project at the box and at the check:
+    | @mosparo('newsletter'), new ValidMosparo('newsletter') or
     | $this->mosparo->verify($this->form, 'newsletter').
-    |
-    | client_arguments are Guzzle options for the verification request, such
-    | as a timeout, or 'verify' => false against a self-signed local instance.
     |
     */
 
@@ -62,9 +73,6 @@ return [
             'uuid' => env('MOSPARO_UUID'),
             'public_key' => env('MOSPARO_PUBLIC_KEY'),
             'private_key' => env('MOSPARO_PRIVATE_KEY'),
-            'client_arguments' => [
-                'timeout' => (int) env('MOSPARO_TIMEOUT', 10),
-            ],
         ],
 
         // 'newsletter' => [
@@ -72,6 +80,7 @@ return [
         //     'uuid' => env('MOSPARO_NEWSLETTER_UUID'),
         //     'public_key' => env('MOSPARO_NEWSLETTER_PUBLIC_KEY'),
         //     'private_key' => env('MOSPARO_NEWSLETTER_PRIVATE_KEY'),
+        //     'client_arguments' => [], // merged over 'client_arguments' above
         // ],
 
     ],

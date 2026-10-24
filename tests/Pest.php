@@ -17,14 +17,15 @@ pest()->extend(TestCase::class)->in('Feature');
  * configured private key, and returns the request bodies it received.
  *
  * @param bool $forged Sign with the wrong key, as an answer that did not come from mosparo.
+ * @param list<string>|null $verified The fields mosparo checked; every submitted field when null.
  *
  * @return ArrayObject<int, array<string, mixed>>
  */
-function mosparoAnswers(bool $valid = true, bool $forged = false, string $project = 'default'): ArrayObject
+function mosparoAnswers(bool $valid = true, bool $forged = false, string $project = 'default', ?array $verified = null): ArrayObject
 {
     $requests = new ArrayObject();
 
-    config()->set("mosparo.projects.{$project}.client_arguments.handler", function (RequestInterface $request) use ($valid, $forged, $project, $requests): PromiseInterface {
+    config()->set("mosparo.projects.{$project}.client_arguments.handler", function (RequestInterface $request) use ($valid, $forged, $project, $verified, $requests): PromiseInterface {
         $body = json_decode((string) $request->getBody(), true);
         $requests[] = $body;
 
@@ -33,7 +34,7 @@ function mosparoAnswers(bool $valid = true, bool $forged = false, string $projec
         return Create::promiseFor(new Response(200, [], (string) json_encode([
             'valid' => $valid,
             'verificationSignature' => $helper->createHmacHash($body['validationSignature'].$body['formSignature']),
-            'verifiedFields' => [],
+            'verifiedFields' => array_fill_keys($verified ?? array_keys($body['formData']), 'valid'),
             'issues' => [],
         ])));
     });

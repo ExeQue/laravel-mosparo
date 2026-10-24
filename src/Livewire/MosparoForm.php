@@ -18,13 +18,11 @@ class MosparoForm extends Form
 
     /**
      * Takes the tokens the box hands over after its check.
-     *
-     * @param array<string, mixed> $tokens
      */
-    public function update(array $tokens): void
+    public function update(mixed $submitToken, mixed $validationToken): void
     {
-        $this->submitToken = is_string($tokens['submitToken'] ?? null) ? $tokens['submitToken'] : '';
-        $this->validationToken = is_string($tokens['validationToken'] ?? null) ? $tokens['validationToken'] : '';
+        $this->submitToken = is_string($submitToken) ? $submitToken : '';
+        $this->validationToken = is_string($validationToken) ? $validationToken : '';
     }
 
     /**
@@ -39,16 +37,34 @@ class MosparoForm extends Form
     }
 
     /**
-     * Checks the submission with mosparo. Once mosparo has seen the tokens they
-     * are spent, whatever the answer: they are cleared, and the boxes in this
-     * component fetch new ones. Validation errors on the form come first, and
-     * leave the tokens as they are.
-     *
-     * @param array<string, mixed>|Form $data The submitted fields, keyed like the form's inputs.
-     * @param string|null $project The project the form's box uses; the default when null.
+     * @return array<string, string>
      */
-    public function verify(array|Form $data, ?string $project = null): bool
+    public function messages(): array
     {
+        return [
+            'submitToken.required' => __('mosparo::messages.failed'),
+            'validationToken.required' => __('mosparo::messages.failed'),
+        ];
+    }
+
+    /**
+     * Validates the form, then checks the submission with mosparo.
+     *
+     * A form failing validation throws as usual and leaves the tokens alone.
+     * Once mosparo has seen the tokens they are spent, whatever the answer:
+     * they are cleared, and the boxes in this component fetch new ones.
+     *
+     * @param array<string, mixed>|Form $data The form, or the submitted fields keyed like the form's inputs.
+     * @param string|null $project The project the form's box uses; the default when null.
+     * @param list<string> $fields Fields that must have been part of mosparo's check.
+     */
+    public function verify(array|Form $data, ?string $project = null, array $fields = []): bool
+    {
+        if ($data instanceof Form) {
+            $data->validate();
+            $data = $data->all();
+        }
+
         $mosparo = app(Mosparo::class)->project($project);
 
         if (! $mosparo->enabled()) {
@@ -57,11 +73,7 @@ class MosparoForm extends Form
 
         $this->validate();
 
-        if ($data instanceof Form) {
-            $data = $data->validate();
-        }
-
-        $passes = $mosparo->passes($data, $this->submitToken, $this->validationToken);
+        $passes = $mosparo->passes($data, $this->submitToken, $this->validationToken, $fields);
 
         $this->reset();
         $this->getComponent()->dispatch(Mosparo::RESET_EVENT, id: $this->getComponent()->getId());

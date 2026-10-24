@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Installs mosparo unattended on SQLite and creates the workbench project, so
+ * Installs mosparo unattended on SQLite and creates the workbench projects, so
  * `docker compose up serve mosparo` gives the demo forms a working mosparo
  * without clicking through the installer. Runs on every start; both steps
  * skip what is already there.
@@ -69,28 +69,33 @@ if (! $user) {
     ]);
 }
 
-if ($entityManager->getRepository(Mosparo\Entity\Project::class)->findOneBy(['uuid' => 'workbench'])) {
-    return;
+$designHelper = $kernel->getContainer()->get('workbench.design_helper');
+
+// One project with the invisible box, one with the checkbox.
+foreach (['workbench' => 'invisible-simple', 'workbench-visible' => 'simple'] as $uuid => $design) {
+    if ($entityManager->getRepository(Mosparo\Entity\Project::class)->findOneBy(['uuid' => $uuid])) {
+        continue;
+    }
+
+    $project = new Mosparo\Entity\Project();
+    $project->setName($uuid);
+    $project->setHosts(['localhost', '127.0.0.1']);
+    $project->setPublicKey("{$uuid}-public");
+    $project->setPrivateKey("{$uuid}-private");
+    // The constructor assigns a random uuid and there is no setter.
+    new ReflectionProperty($project, 'uuid')->setValue($project, $uuid);
+    $project->setConfigValue('designMode', $design);
+
+    $member = new Mosparo\Entity\ProjectMember();
+    $member->setProject($project);
+    $member->setUser($user);
+    $member->setRole(Mosparo\Entity\ProjectMember::ROLE_OWNER);
+
+    $entityManager->persist($project);
+    $entityManager->persist($member);
+    $entityManager->flush();
+
+    // Without a rendered stylesheet mosparo serves its default design.
+    $designHelper->generateCssCache($project);
+    $entityManager->flush();
 }
-
-$project = new Mosparo\Entity\Project();
-$project->setName('workbench');
-$project->setHosts(['localhost', '127.0.0.1']);
-$project->setPublicKey('workbench-public');
-$project->setPrivateKey('workbench-private');
-// The constructor assigns a random uuid and there is no setter.
-new ReflectionProperty($project, 'uuid')->setValue($project, 'workbench');
-$project->setConfigValue('designMode', 'invisible-simple');
-
-$member = new Mosparo\Entity\ProjectMember();
-$member->setProject($project);
-$member->setUser($user);
-$member->setRole(Mosparo\Entity\ProjectMember::ROLE_OWNER);
-
-$entityManager->persist($project);
-$entityManager->persist($member);
-$entityManager->flush();
-
-// Without a rendered stylesheet mosparo serves its default, visible design.
-$kernel->getContainer()->get('workbench.design_helper')->generateCssCache($project);
-$entityManager->flush();

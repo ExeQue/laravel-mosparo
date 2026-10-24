@@ -3,37 +3,31 @@
 declare(strict_types=1);
 
 use ExeQue\Mosparo\Rules\ValidMosparo;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Validator;
 
-function validateWithMosparo(array $data, ?string $project = null): Illuminate\Validation\Validator
+function validateWithMosparo(array $data, ?string $project = null, array $fields = []): Illuminate\Validation\Validator
 {
     return Validator::make($data, [
-        '_mosparo_submitToken' => [new ValidMosparo($project)],
+        '_mosparo_submitToken' => [new ValidMosparo($project, $fields)],
     ]);
+}
+
+function withTokens(array $data): array
+{
+    return [...$data, '_mosparo_submitToken' => 'submit', '_mosparo_validationToken' => 'validation'];
 }
 
 it('passes a submission mosparo accepts', function () {
     $requests = mosparoAnswers();
 
-    $validator = validateWithMosparo([
-        'email' => 'ada@example.com',
-        '_mosparo_submitToken' => 'submit',
-        '_mosparo_validationToken' => 'validation',
-    ]);
-
-    expect($validator->passes())->toBeTrue()
+    expect(validateWithMosparo(withTokens(['email' => 'ada@example.com']))->passes())->toBeTrue()
         ->and($requests[0]['formData'])->toBe(['email' => hash('sha256', 'ada@example.com')]);
 });
 
 it('fails a submission mosparo rejects', function () {
     mosparoAnswers(valid: false);
 
-    $validator = validateWithMosparo([
-        'email' => 'ada@example.com',
-        '_mosparo_submitToken' => 'submit',
-        '_mosparo_validationToken' => 'validation',
-    ]);
+    $validator = validateWithMosparo(withTokens(['email' => 'ada@example.com']));
 
     expect($validator->fails())->toBeTrue()
         ->and($validator->errors()->first('_mosparo_submitToken'))->toBe('The spam check failed. Please try again.');
@@ -46,50 +40,29 @@ it('fails a form posted without the box', function () {
         ->and($requests)->toHaveCount(0);
 });
 
-it('ignores tokens that are not strings', function () {
-    $requests = mosparoAnswers();
+it('fails when mosparo never saw a field it must check', function () {
+    mosparoAnswers(verified: ['email']);
 
-    $validator = validateWithMosparo([
-        '_mosparo_submitToken' => ['submit'],
-        '_mosparo_validationToken' => 'validation',
-    ]);
-
-    expect($validator->fails())->toBeTrue()
-        ->and($requests)->toHaveCount(0);
+    expect(validateWithMosparo(withTokens(['email' => 'ada@example.com', 'message' => 'Buy now']), fields: ['message'])->fails())->toBeTrue();
 });
 
-it('leaves uploaded files out of what mosparo sees', function () {
+it('sends nested fields under the names the form gave them', function () {
     $requests = mosparoAnswers();
 
-    validateWithMosparo([
-        'name' => 'Ada',
-        'avatar' => UploadedFile::fake()->create('avatar.png'),
-        'tags' => ['one', UploadedFile::fake()->create('other.png')],
-        '_mosparo_submitToken' => 'submit',
-        '_mosparo_validationToken' => 'validation',
-    ])->passes();
+    validateWithMosparo(withTokens(['address' => ['street' => 'Main St']]))->passes();
 
-    expect($requests[0]['formData'])->toBe([
-        'name' => hash('sha256', 'Ada'),
-        'tags' => [hash('sha256', 'one')],
-    ]);
+    expect($requests[0]['formData'])->toBe(['address[street]' => hash('sha256', 'Main St')]);
 });
 
 it('checks against the named project', function () {
     config()->set('mosparo.projects.newsletter', [
-        'host' => 'https://mosparo.example',
         'uuid' => 'newsletter-uuid',
         'public_key' => 'newsletter-public',
         'private_key' => 'newsletter-private',
     ]);
     $requests = mosparoAnswers(project: 'newsletter');
 
-    $validator = validateWithMosparo([
-        '_mosparo_submitToken' => 'submit',
-        '_mosparo_validationToken' => 'validation',
-    ], 'newsletter');
-
-    expect($validator->passes())->toBeTrue()
+    expect(validateWithMosparo(withTokens([]), 'newsletter')->passes())->toBeTrue()
         ->and($requests)->toHaveCount(1);
 });
 

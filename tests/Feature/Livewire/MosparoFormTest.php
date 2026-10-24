@@ -12,11 +12,11 @@ function contact(): Testable
     return Livewire::test(Contact::class)
         ->set('form.email', 'ada@example.com')
         ->set('form.message', 'Hello')
-        ->call('updateMosparo', ['submitToken' => 'submit', 'validationToken' => 'validation']);
+        ->dispatch(Mosparo::CHECKED_EVENT, submitToken: 'submit', validationToken: 'validation');
 }
 
 describe('receiving the tokens', function () {
-    it('takes the tokens from the box', function () {
+    it('takes the tokens the box dispatches', function () {
         contact()
             ->assertSet('mosparo.submitToken', 'submit')
             ->assertSet('mosparo.validationToken', 'validation');
@@ -24,13 +24,13 @@ describe('receiving the tokens', function () {
 
     it('drops tokens that are not strings', function () {
         Livewire::test(Contact::class)
-            ->call('updateMosparo', ['submitToken' => ['submit'], 'validationToken' => 42])
+            ->dispatch(Mosparo::CHECKED_EVENT, submitToken: ['submit'], validationToken: 42)
             ->assertSet('mosparo.submitToken', '')
             ->assertSet('mosparo.validationToken', '');
     });
 
     it('renders the box with the component', function () {
-        Livewire::test(Contact::class)->assertSee('data-mosparo-box', escape: false);
+        Livewire::test(Contact::class)->assertSee('data-mosparo=', escape: false);
     });
 });
 
@@ -65,6 +65,12 @@ describe('verifying', function () {
             ->assertSet('sent', false);
     });
 
+    it('stops the submission when mosparo never saw a field it must check', function () {
+        mosparoAnswers(verified: ['email']);
+
+        contact()->call('sendMessage')->assertSet('sent', false);
+    });
+
     it('asks for new tokens once mosparo has seen them', function (bool $valid) {
         mosparoAnswers(valid: $valid);
 
@@ -79,20 +85,20 @@ describe('verifying', function () {
         'rejected' => [false],
     ]);
 
-    it('keeps the tokens when the form fails before mosparo is asked', function () {
+    it('shows the form\'s own errors first and keeps the tokens', function () {
         $requests = mosparoAnswers();
 
-        contact()
+        Livewire::test(Contact::class)
             ->set('form.email', 'not an email')
             ->call('send')
             ->assertHasErrors(['form.email'])
-            ->assertNotDispatched(Mosparo::RESET_EVENT)
-            ->assertSet('mosparo.submitToken', 'submit');
+            ->assertHasNoErrors(['mosparo.submitToken'])
+            ->assertNotDispatched(Mosparo::RESET_EVENT);
 
         expect($requests)->toHaveCount(0);
     });
 
-    it('needs the tokens', function () {
+    it('needs the tokens, and says so in the package\'s words', function () {
         $requests = mosparoAnswers();
 
         Livewire::test(Contact::class)
@@ -100,12 +106,23 @@ describe('verifying', function () {
             ->set('form.message', 'Hello')
             ->call('send')
             ->assertHasErrors(['mosparo.submitToken' => 'required', 'mosparo.validationToken' => 'required'])
+            ->assertSee('The spam check failed. Please try again.')
             ->assertSet('sent', false);
 
         expect($requests)->toHaveCount(0);
     });
 
-    it('lets everything through when switched off', function () {
+    it('still validates the form when switched off', function () {
+        config()->set('mosparo.enabled', false);
+
+        Livewire::test(Contact::class)
+            ->set('form.email', 'not an email')
+            ->call('send')
+            ->assertHasErrors(['form.email'])
+            ->assertSet('sent', false);
+    });
+
+    it('lets a valid form through when switched off', function () {
         config()->set('mosparo.enabled', false);
 
         Livewire::test(Contact::class)

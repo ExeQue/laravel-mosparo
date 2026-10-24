@@ -5,23 +5,25 @@ declare(strict_types=1);
 namespace ExeQue\Mosparo\Livewire\Concerns;
 
 use ExeQue\Mosparo\Livewire\MosparoForm;
+use ExeQue\Mosparo\Mosparo;
+use Livewire\Attributes\On;
+use Livewire\Attributes\Renderless;
 
 /**
- * Gives a Livewire component the tokens of its box as `$mosparo`, and the
- * `updateMosparo()` method the box calls after its check. Check a submission
- * with `$this->mosparo->verify($this->form)`.
+ * Gives a Livewire component the tokens of its box as `$mosparo`. Check a
+ * submission with `$this->mosparo->verify($this->form)`.
  */
 trait InteractsWithMosparo
 {
     public MosparoForm $mosparo;
 
     /**
-     * Called by the box with the submit and validation token of its check.
-     *
-     * @param array<string, mixed> $tokens
+     * Receives the tokens the box dispatches after its check.
      */
-    public function updateMosparo(array $tokens): void
+    #[On(Mosparo::CHECKED_EVENT)]
+    #[Renderless]
+    public function updateMosparo(mixed $submitToken = null, mixed $validationToken = null): void
     {
-        $this->mosparo->update($tokens);
+        $this->mosparo->update($submitToken, $validationToken);
     }
 }

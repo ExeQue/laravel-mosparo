@@ -2,9 +2,7 @@
 
 **Documentation: [exeque.github.io/laravel-mosparo](https://exeque.github.io/laravel-mosparo/)**
 
-[mosparo](https://mosparo.io) spam protection for Laravel and Livewire. Put the box in a form with one directive, and check the submission with a validation rule, a Livewire trait or a facade.
-
-A mosparo submission can be verified once. Every check here spends the tokens and the box fetches new ones, so a form that fails for another reason - a wrong password, a taken email address - can simply be sent again.
+[mosparo](https://mosparo.io) spam protection for Laravel and Livewire. Put the box in a form with one directive, and check the submission with a validation rule, a Livewire trait or a facade. If a form fails for another reason, such as a wrong password, it can simply be sent again.
 
 ## Install
 
@@ -29,44 +27,57 @@ MOSPARO_PRIVATE_KEY=your-private-key
 <form method="post" action="/newsletter">
     @csrf
     <input name="email" type="email">
+
     @mosparo
+    @mosparoError <p class="error">{{ $message }}</p> @enderror
+
     <button type="submit">Subscribe</button>
 </form>
 ```
 
-A plain form post checks with a validation rule:
+A plain form post is checked by a validation rule:
 
 ```php
-'_mosparo_submitToken' => [new ValidMosparo],
+use ExeQue\Mosparo\Rules\ValidMosparo;
+
+'_mosparo_submitToken' => [new ValidMosparo(fields: ['email'])],
 ```
 
 A Livewire component uses the trait:
 
 ```php
-use InteractsWithMosparo;
+use ExeQue\Mosparo\Livewire\Concerns\InteractsWithMosparo;
 
-public function signIn(): void
+class SignIn extends Component
 {
-    if (! $this->mosparo->verify($this->form)) {
-        return;
-    }
+    use InteractsWithMosparo;
 
-    // ...
+    public function signIn(): void
+    {
+        if (! $this->mosparo->verify($this->form, fields: ['email'])) {
+            return;
+        }
+
+        // ...
+    }
 }
 ```
 
-And anything else asks the facade:
+Anything else asks the facade:
 
 ```php
-Mosparo::passes($formData, $submitToken, $validationToken);
+use ExeQue\Mosparo\Facades\Mosparo;
+
+Mosparo::passes($formData, $submitToken, $validationToken, fields: ['message']);
 ```
 
-## What else
+## Features
 
-- [Several mosparo projects](docs/projects.md) in one application, each picked by name on the server
-- [Switched off](docs/switching-off.md) with one env key, for local work and tests
+- [Several mosparo projects](docs/projects.md) in one application, picked by name
+- [Disabled](docs/switching-off.md) with one env key, for local work and tests
+- Visible and invisible boxes, started wherever they appear: Livewire updates, `wire:navigate`, the back button
 - The error message in [29 European languages](docs/translations.md)
-- [A workbench](CONTRIBUTING.md) with real mosparo, through lerd or Docker
+- [A workbench](CONTRIBUTING.md) with a real mosparo, through lerd or Docker
 
 Read on in the [documentation](docs/README.md).
 

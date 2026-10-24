@@ -5,6 +5,7 @@ on:
     branches: [ "main" ]
     paths: &docs
       - 'README.md'
+      - 'CONTRIBUTING.md'
       - 'LICENSE.md'
       - 'docs/**'
       - '.vitepress/**'
@@ -45,7 +46,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version-file: .nvmrc
           cache: npm
 
       - name: Install dependencies

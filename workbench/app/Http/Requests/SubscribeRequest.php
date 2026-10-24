@@ -16,7 +16,7 @@ class SubscribeRequest extends FormRequest
     {
         return [
             'email' => ['required', 'email'],
-            '_mosparo_submitToken' => [new ValidMosparo()],
+            '_mosparo_submitToken' => [new ValidMosparo(fields: ['email'])],
         ];
     }
 }
