@@ -12,7 +12,7 @@ class SubscribeRequest extends FormRequest
     {
         return [
             'email' => ['required', 'email'],
-            '_mosparo_submitToken' => [new ValidMosparo(fields: ['email'])],
+            '_mosparo_submitToken' => [new ValidMosparo(['email'])],
         ];
     }
 }
@@ -29,18 +29,20 @@ After a post, the page reloads and the box starts again with new tokens.
 
 ## Fields mosparo must check
 
-mosparo checks the fields the box sends it. Someone sending spam can keep a field out of that check, for example by removing its `name` attribute before the box runs, and then add it back to the post. List the fields that matter in `fields`, and the rule fails unless mosparo checked each of them and found it valid:
+mosparo checks the fields the box sends it. Someone sending spam can keep a field out of that check, for example by removing its `name` attribute before the box runs, and then add it back to the post. The rule therefore takes the fields that matter, and fails unless mosparo checked each of them and found it valid:
 
 ```php
-new ValidMosparo(fields: ['email', 'message'])
+new ValidMosparo(['email', 'message'])
 ```
 
-Passwords, hidden fields, checkboxes, radio buttons and files are never part of mosparo's check, so they cannot be listed.
+List every field a person types into. Passwords, hidden fields, checkboxes, radio buttons and files are never part of mosparo's check, so they cannot be listed. An empty list checks the tokens alone.
+
+Fields are named as in the form: `address[street]`, or `rows[0][name]` in a repeated group.
 
 ## Another project
 
 ```php
-new ValidMosparo('newsletter', fields: ['email'])
+new ValidMosparo(['email'], project: 'newsletter')
 ```
 
 See [Several projects](projects.md).

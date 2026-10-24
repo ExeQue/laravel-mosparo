@@ -5,10 +5,10 @@ declare(strict_types=1);
 use ExeQue\Mosparo\Rules\ValidMosparo;
 use Illuminate\Support\Facades\Validator;
 
-function validateWithMosparo(array $data, ?string $project = null, array $fields = []): Illuminate\Validation\Validator
+function validateWithMosparo(array $data, array $fields = [], ?string $project = null): Illuminate\Validation\Validator
 {
     return Validator::make($data, [
-        '_mosparo_submitToken' => [new ValidMosparo($project, $fields)],
+        '_mosparo_submitToken' => [new ValidMosparo($fields, $project)],
     ]);
 }
 
@@ -62,7 +62,7 @@ it('checks against the named project', function () {
     ]);
     $requests = mosparoAnswers(project: 'newsletter');
 
-    expect(validateWithMosparo(withTokens([]), 'newsletter')->passes())->toBeTrue()
+    expect(validateWithMosparo(withTokens([]), project: 'newsletter')->passes())->toBeTrue()
         ->and($requests)->toHaveCount(1);
 });
 

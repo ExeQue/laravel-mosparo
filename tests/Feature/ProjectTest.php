@@ -78,7 +78,7 @@ describe('sharing settings between projects', function () {
             return Create::promiseFor(new Response(200, [], '{"valid":false}'));
         });
 
-        Mosparo::project('newsletter')->passes([], 'submit', 'validation');
+        Mosparo::project('newsletter')->passes([], 'submit', 'validation', []);
 
         expect($requests[0])->toMatchArray(['timeout' => 3, 'verify' => false]);
     });
@@ -98,8 +98,17 @@ describe('switching it off', function () {
         config()->set('mosparo.projects.default', []);
         $requests = mosparoAnswers(valid: false);
 
-        expect(Mosparo::passes(['email' => 'ada@example.com'], null, null))->toBeTrue()
+        expect(Mosparo::passes(['email' => 'ada@example.com'], null, null, []))->toBeTrue()
             ->and($requests)->toHaveCount(0);
+    });
+});
+
+describe('a host with a path', function () {
+    it('throws, as mosparo\'s API lives at the root of the host', function () {
+        config()->set('mosparo.projects.default.host', 'https://example.com/mosparo');
+
+        expect(fn () => Mosparo::verify([], 'submit', 'validation'))
+            ->toThrow(IncompleteProject::class, 'must be the installation\'s origin, without a path: [https://example.com/mosparo]');
     });
 });
 
@@ -121,7 +130,7 @@ describe('a project missing a value', function () {
         Exceptions::fake();
         config()->set('mosparo.projects.default.private_key', '');
 
-        expect(Mosparo::passes(['email' => 'ada@example.com'], 'submit', 'validation'))->toBeFalse();
+        expect(Mosparo::passes(['email' => 'ada@example.com'], 'submit', 'validation', []))->toBeFalse();
 
         Exceptions::assertReported(IncompleteProject::class);
     });
@@ -131,7 +140,7 @@ describe('checking a submission', function () {
     it('passes what mosparo accepts', function () {
         $requests = mosparoAnswers();
 
-        expect(Mosparo::passes(['email' => 'ada@example.com'], 'submit', 'validation'))->toBeTrue()
+        expect(Mosparo::passes(['email' => 'ada@example.com'], 'submit', 'validation', []))->toBeTrue()
             ->and($requests)->toHaveCount(1)
             ->and($requests[0]['submitToken'])->toBe('submit')
             ->and($requests[0]['formData'])->toBe(['email' => hash('sha256', 'ada@example.com')]);
@@ -140,19 +149,19 @@ describe('checking a submission', function () {
     it('fails what mosparo rejects', function () {
         mosparoAnswers(valid: false);
 
-        expect(Mosparo::passes(['email' => 'ada@example.com'], 'submit', 'validation'))->toBeFalse();
+        expect(Mosparo::passes(['email' => 'ada@example.com'], 'submit', 'validation', []))->toBeFalse();
     });
 
     it('fails an answer that was not signed with the project key', function () {
         mosparoAnswers(forged: true);
 
-        expect(Mosparo::passes(['email' => 'ada@example.com'], 'submit', 'validation'))->toBeFalse();
+        expect(Mosparo::passes(['email' => 'ada@example.com'], 'submit', 'validation', []))->toBeFalse();
     });
 
     it('fails without asking when a token is missing', function (mixed $submitToken, mixed $validationToken) {
         $requests = mosparoAnswers();
 
-        expect(Mosparo::passes([], $submitToken, $validationToken))->toBeFalse()
+        expect(Mosparo::passes([], $submitToken, $validationToken, []))->toBeFalse()
             ->and($requests)->toHaveCount(0);
     })->with([
         'no submit token' => [null, 'validation'],
@@ -165,7 +174,7 @@ describe('checking a submission', function () {
         Exceptions::fake();
         mosparoIsUnreachable();
 
-        expect(Mosparo::passes(['email' => 'ada@example.com'], 'submit', 'validation'))->toBeFalse();
+        expect(Mosparo::passes(['email' => 'ada@example.com'], 'submit', 'validation', []))->toBeFalse();
 
         Exceptions::assertReported(ClientException::class);
     });
@@ -174,7 +183,7 @@ describe('checking a submission', function () {
         Exceptions::fake();
         config()->set('mosparo.projects.default.client_arguments.handler', fn () => Create::promiseFor(new Response(200, [], 'true')));
 
-        expect(Mosparo::passes(['email' => 'ada@example.com'], 'submit', 'validation'))->toBeFalse();
+        expect(Mosparo::passes(['email' => 'ada@example.com'], 'submit', 'validation', []))->toBeFalse();
 
         Exceptions::assertReported(TypeError::class);
     });
@@ -183,7 +192,7 @@ describe('checking a submission', function () {
         newsletterProject();
         $requests = mosparoAnswers(project: 'newsletter');
 
-        expect(Mosparo::project('newsletter')->passes(['email' => 'ada@example.com'], 'submit', 'validation'))->toBeTrue()
+        expect(Mosparo::project('newsletter')->passes(['email' => 'ada@example.com'], 'submit', 'validation', []))->toBeTrue()
             ->and($requests)->toHaveCount(1);
     });
 

@@ -48,17 +48,18 @@ class MosparoForm extends Form
     }
 
     /**
-     * Validates the form, then checks the submission with mosparo.
+     * Validates the form, then checks the submission with mosparo. Returns
+     * false when mosparo turns it away; stop there.
      *
      * A form failing validation throws as usual and leaves the tokens alone.
      * Once mosparo has seen the tokens they are spent, whatever the answer:
      * they are cleared, and the boxes in this component fetch new ones.
      *
      * @param array<string, mixed>|Form $data The form, or the submitted fields keyed like the form's inputs.
-     * @param string|null $project The project the form's box uses; the default when null.
      * @param list<string> $fields Fields that must have been part of mosparo's check.
+     * @param string|null $project The project the form's box uses; the default when null.
      */
-    public function verify(array|Form $data, ?string $project = null, array $fields = []): bool
+    public function verify(array|Form $data, array $fields, ?string $project = null): bool
     {
         if ($data instanceof Form) {
             $data->validate();

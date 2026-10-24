@@ -11,7 +11,11 @@ use Livewire\Attributes\Renderless;
 
 /**
  * Gives a Livewire component the tokens of its box as `$mosparo`. Check a
- * submission with `$this->mosparo->verify($this->form)`.
+ * submission, and stop when it fails:
+ *
+ *     if (! $this->mosparo->verify($this->form, ['message'])) {
+ *         return;
+ *     }
  */
 trait InteractsWithMosparo
 {

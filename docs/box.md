@@ -46,10 +46,12 @@ The component takes a few attributes:
 | --- | --- | --- |
 | `project` | the default project | Which [project](projects.md) the box belongs to. |
 | `id` | a random id | The box element's id. |
-| `options` | `[]` | [Options for mosparo's frontend](https://documentation.mosparo.io/docs/integration/custom/#options), such as `language`, `forceInvisible` or `inputFieldSelector`. Plain values only - callbacks cannot be passed. |
+| `options` | `[]` | [Options for mosparo's frontend](https://documentation.mosparo.io/docs/integration/custom/#options), such as `language` or `forceInvisible`. Plain values only - callbacks cannot be passed. |
 | anything else | | Added to the box element. |
 
 `@mosparo` takes only the project, as in `@mosparo('newsletter')`. Use the component for the other attributes.
+
+The box sets `loadCssResource`, `onCheckForm` and `onGetFieldValue` itself. Leave `requestSubmitTokenOnInit`, `isMultiStepForm` and `inputFieldSelector` at mosparo's defaults: changing them stops the box from working with this package.
 
 ## Visible and invisible
 

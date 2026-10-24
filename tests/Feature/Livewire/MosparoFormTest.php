@@ -32,6 +32,15 @@ describe('receiving the tokens', function () {
     it('renders the box with the component', function () {
         Livewire::test(Contact::class)->assertSee('data-mosparo=', escape: false);
     });
+
+    it('keeps the box\'s id between renders, so Livewire keeps the box', function () {
+        $component = Livewire::test(Contact::class);
+        $id = "mosparo-{$component->id()}-default";
+
+        $component->assertSeeHtml("id=\"{$id}\"")
+            ->set('form.message', 'Changed')
+            ->assertSeeHtml("id=\"{$id}\"");
+    });
 });
 
 describe('verifying', function () {

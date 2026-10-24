@@ -4,7 +4,7 @@ Issues and pull requests are welcome. Keep a change small and covered by tests: 
 
 ## The workbench
 
-The workbench has four forms against a real mosparo: a Livewire sign-in, a plain form, a visible checkbox next to a box forced invisible, and a form mosparo rejects.
+The workbench has four pages of forms against a real mosparo: a Livewire sign-in, a plain form, a visible checkbox next to a box forced invisible, and a form mosparo rejects.
 
 ### With lerd
 

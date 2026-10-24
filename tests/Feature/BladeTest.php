@@ -30,9 +30,9 @@ function boxConfig(string $html): array
 }
 
 describe('@mosparoScript', function () {
-    it('loads mosparo\'s frontend and starts the boxes once it is there', function () {
+    it('loads mosparo\'s frontend and the script that starts the boxes', function () {
         expect(Blade::render('@mosparoScript'))
-            ->toContain('<script src="https://mosparo.example/build/mosparo-frontend.js" defer onload="window.laravelMosparo.start()"></script>')
+            ->toContain('<script src="https://mosparo.example/build/mosparo-frontend.js" defer></script>')
             ->toContain('window.laravelMosparo = { start };');
     });
 
@@ -49,11 +49,13 @@ describe('@mosparoScript', function () {
         expect(trim(Blade::render('@mosparoScript')))->toBe('');
     });
 
-    it('escapes the host', function () {
-        config()->set('mosparo.projects.default.host', 'https://x.example/"><script>alert(1)</script>');
+    it('carries the page\'s CSP nonce', function () {
+        Illuminate\Support\Facades\Vite::useCspNonce('abc123');
 
-        expect(Blade::render('@mosparoScript'))->not->toContain('<script>alert(1)</script>');
+        expect(substr_count(Blade::render('@mosparoScript'), 'nonce="abc123"'))->toBe(2);
     });
+
+
 });
 
 describe('the box', function () {
@@ -95,6 +97,15 @@ describe('the box', function () {
 
         expect($html)->toContain('id="signup-box"')->toContain('class="mt-4"')
             ->and(boxConfig($html)['options'])->toBe(['language' => 'da']);
+    });
+
+    it('escapes what it puts in the page', function () {
+        config()->set('mosparo.projects.default.uuid', '"><img src=x onerror=alert(1)>');
+
+        $html = Blade::render('<x-mosparo />');
+
+        expect($html)->not->toContain('<img')
+            ->and(boxConfig($html)['uuid'])->toBe('"><img src=x onerror=alert(1)>');
     });
 
     it('renders nothing when switched off', function (string $template) {
@@ -168,7 +179,7 @@ describe('compiled views', function () {
     })->with([
         'script' => ['@mosparoScript', '<?php echo app(\ExeQue\Mosparo\Mosparo::class)->project(null)->script(); ?>'],
         'named script' => ["@mosparoScript('newsletter')", "<?php echo app(\\ExeQue\\Mosparo\\Mosparo::class)->project('newsletter')->script(); ?>"],
-        'box' => ['@mosparo', '<?php echo \Illuminate\Support\Facades\Blade::render(\'<x-mosparo :project="$project" />\', [\'project\' => null]); ?>'],
-        'named box' => ["@mosparo('newsletter')", '<?php echo \Illuminate\Support\Facades\Blade::render(\'<x-mosparo :project="$project" />\', [\'project\' => \'newsletter\']); ?>'],
+        'box' => ['@mosparo', "<?php echo view('mosparo::components.mosparo', ['project' => null, 'attributes' => new \\Illuminate\\View\\ComponentAttributeBag])->render(); ?>"],
+        'named box' => ["@mosparo('newsletter')", "<?php echo view('mosparo::components.mosparo', ['project' => 'newsletter', 'attributes' => new \\Illuminate\\View\\ComponentAttributeBag])->render(); ?>"],
     ]);
 });

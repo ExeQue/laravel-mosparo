@@ -11,10 +11,11 @@ use Illuminate\Contracts\Validation\ValidationRule;
 
 /**
  * Checks a plain form post with mosparo: the submitted fields, with the two
- * tokens the box placed in the form. Put it on `_mosparo_submitToken`:
+ * tokens the box placed in the form. Put it on `_mosparo_submitToken`, with
+ * the fields mosparo must have checked:
  *
- *     '_mosparo_submitToken' => [new ValidMosparo(fields: ['email'])],
- *     '_mosparo_submitToken' => [new ValidMosparo('newsletter', fields: ['email'])],
+ *     '_mosparo_submitToken' => [new ValidMosparo(['email', 'message'])],
+ *     '_mosparo_submitToken' => [new ValidMosparo(['email'], project: 'newsletter')],
  */
 class ValidMosparo implements DataAwareRule, ValidationRule
 {
@@ -29,12 +30,12 @@ class ValidMosparo implements DataAwareRule, ValidationRule
     private array $data = [];
 
     /**
-     * @param string|null $project The project the form's box uses; the default when null.
      * @param list<string> $fields Fields that must have been part of mosparo's check.
+     * @param string|null $project The project the form's box uses; the default when null.
      */
     public function __construct(
+        private readonly array $fields,
         private readonly ?string $project = null,
-        private readonly array $fields = [],
     ) {
     }
 

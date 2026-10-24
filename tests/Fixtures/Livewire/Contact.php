@@ -17,7 +17,7 @@ class Contact extends Component
 
     public function send(): void
     {
-        if (! $this->mosparo->verify($this->form)) {
+        if (! $this->mosparo->verify($this->form, [])) {
             return;
         }
 
@@ -26,12 +26,12 @@ class Contact extends Component
 
     public function sendArray(): void
     {
-        $this->sent = $this->mosparo->verify($this->form->validate());
+        $this->sent = $this->mosparo->verify($this->form->validate(), []);
     }
 
     public function sendMessage(): void
     {
-        $this->sent = $this->mosparo->verify($this->form, fields: ['message']);
+        $this->sent = $this->mosparo->verify($this->form, ['message']);
     }
 
     public function render(): string

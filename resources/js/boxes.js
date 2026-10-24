@@ -8,6 +8,7 @@
         return;
     }
 
+    const started = new Set();
     const componentOf = (box) => box.closest('[wire\\:id]')?.getAttribute('wire:id');
 
     function startBox(box) {
@@ -23,7 +24,7 @@
         box.mosparo = new mosparo(box.id, config.host, config.uuid, config.publicKey, {
             loadCssResource: true,
             ...config.options,
-            // Laravel trims submitted strings, so the box checks them trimmed too.
+            // The server trims submitted strings, so the box checks them trimmed too.
             onGetFieldValue: (field, value) => (typeof value === 'string' ? value.trim() : value),
             onCheckForm: (valid) => {
                 const component = componentOf(box);
@@ -39,31 +40,72 @@
             },
         });
 
-        // Check before any other submit handler, such as Livewire's wire:submit, sends the form.
-        const form = box.mosparo.formElement;
+        // mosparo checks the form before any other submit handler, such as
+        // Livewire's wire:submit, sends it, and ignores a second submit while
+        // a check is running.
+        box.onSubmit = (event) => {
+            if (box.mosparo.containerElement?.classList.contains('mosparo__loading')) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
 
-        if (form) {
-            form.removeEventListener('submit', box.mosparo.onSubmit);
-            form.addEventListener('submit', box.mosparo.onSubmit, true);
-        }
-    }
-
-    function start() {
-        document.querySelectorAll('[data-mosparo]').forEach(startBox);
-    }
-
-    // After a Livewire check the tokens are spent: the boxes of that component start over.
-    window.addEventListener('mosparo-reset', (event) => {
-        document.querySelectorAll('[data-mosparo]').forEach((box) => {
-            if (!box.mosparo || (event.detail?.id && event.detail.id !== componentOf(box))) {
                 return;
             }
 
-            box.querySelectorAll('.mosparo__loader-container').forEach((loader) => loader.remove());
-            box.mosparo.resetState();
-            box.mosparo.requestSubmitToken();
+            box.mosparo.onSubmit(event);
+        };
+
+        box.mosparo.formElement?.removeEventListener('submit', box.mosparo.onSubmit);
+        box.mosparo.formElement?.addEventListener('submit', box.onSubmit, true);
+        started.add(box);
+    }
+
+    // A box Livewire took out of the page stops checking its form.
+    function stopRemovedBoxes() {
+        started.forEach((box) => {
+            if (box.isConnected) {
+                return;
+            }
+
+            box.mosparo.formElement?.removeEventListener('submit', box.onSubmit, true);
+            started.delete(box);
+        });
+    }
+
+    function start() {
+        stopRemovedBoxes();
+        document.querySelectorAll('[data-mosparo]').forEach(startBox);
+    }
+
+    // Spent tokens: the box forgets them and asks mosparo for a new submit token.
+    function reset(box) {
+        box.querySelectorAll('.mosparo__loader-container').forEach((loader) => loader.remove());
+        box.mosparo.resetState();
+        box.mosparo.submitTokenElement.value = '';
+        box.mosparo.requestSubmitToken();
+    }
+
+    // After a Livewire check, the boxes of that component start over.
+    window.addEventListener('mosparo-reset', (event) => {
+        started.forEach((box) => {
+            if (!event.detail?.id || event.detail.id === componentOf(box)) {
+                reset(box);
+            }
         });
     });
+
+    // A page from the back/forward cache comes back with the tokens it already spent.
+    window.addEventListener('pageshow', (event) => {
+        if (event.persisted) {
+            started.forEach(reset);
+        }
+    });
+
+    // mosparo's frontend script, loaded later on a page reached with wire:navigate.
+    document.addEventListener('load', (event) => {
+        if (event.target.tagName === 'SCRIPT' && event.target.src.includes('/build/mosparo-frontend.js')) {
+            start();
+        }
+    }, true);
 
     let scheduled = false;
 

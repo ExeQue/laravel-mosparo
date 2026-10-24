@@ -19,4 +19,13 @@ class IncompleteProject extends RuntimeException implements MosparoException
             implode(', ', $missing),
         ));
     }
+
+    public static function hostWithPath(string $name, string $host): self
+    {
+        return new self(sprintf(
+            'The host of the mosparo project [%s] must be the installation\'s origin, without a path: [%s].',
+            $name,
+            $host,
+        ));
+    }
 }

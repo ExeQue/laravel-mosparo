@@ -26,7 +26,7 @@ MOSPARO_NEWSLETTER_PUBLIC_KEY=...
 MOSPARO_NEWSLETTER_PRIVATE_KEY=...
 ```
 
-Every project uses the shared `host` and `client_arguments`. A project on another mosparo installation sets its own `host`, and a project's own `client_arguments` are merged over the shared ones.
+Every project uses the shared `host` and `client_arguments`. A project on another mosparo installation sets its own `host`, and a project's own `client_arguments` replace the shared ones, option by option.
 
 Name the project at the box and at the check, with the same name in both places:
 
@@ -37,13 +37,11 @@ Name the project at the box and at the check, with the same name in both places:
 ```
 
 ```php
-'_mosparo_submitToken' => [new ValidMosparo('newsletter')],
+'_mosparo_submitToken' => [new ValidMosparo(['email'], project: 'newsletter')],
 
-$this->mosparo->verify($this->form, 'newsletter');
+$this->mosparo->verify($this->form, ['email'], 'newsletter');
 
-Mosparo::project('newsletter')->passes($formData, $submitToken, $validationToken);
+Mosparo::project('newsletter')->passes($formData, $submitToken, $validationToken, ['email']);
 ```
-
-A box of a project on another host also needs that host's frontend in the head: `@mosparoScript('newsletter')`.
 
 An unknown name throws an `UnknownProject` exception. `MOSPARO_PROJECT` changes which project is the default.

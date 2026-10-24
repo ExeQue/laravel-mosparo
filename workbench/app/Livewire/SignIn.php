@@ -35,7 +35,7 @@ class SignIn extends Component
 
         $this->result = null;
 
-        if (! $this->mosparo->verify($data, fields: ['email'])) {
+        if (! $this->mosparo->verify($data, ['email'])) {
             return;
         }
 

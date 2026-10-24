@@ -5,10 +5,9 @@ The `Mosparo` facade talks to mosparo from anywhere in the backend. It reaches t
 ```php
 use ExeQue\Mosparo\Facades\Mosparo;
 
-Mosparo::passes($formData, $submitToken, $validationToken);
-Mosparo::passes($formData, $submitToken, $validationToken, fields: ['message']);
+Mosparo::passes($formData, $submitToken, $validationToken, ['email', 'message']);
 
-Mosparo::project('newsletter')->passes($formData, $submitToken, $validationToken);
+Mosparo::project('newsletter')->passes($formData, $submitToken, $validationToken, ['email']);
 
 Mosparo::enabled();
 ```
@@ -21,7 +20,7 @@ Mosparo::enabled();
 - It fails when a token is missing.
 - It fails, and reports the exception, when mosparo cannot be reached or the project misses a value.
 - It only passes when mosparo's answer is signed with the project's private key.
-- It fails unless mosparo checked each of `fields` and found it valid. See [Fields mosparo must check](plain-forms.md#fields-mosparo-must-check).
+- It fails unless mosparo checked each of the listed fields and found it valid. See [Fields mosparo must check](plain-forms.md#fields-mosparo-must-check).
 
 `$formData` holds the submitted fields, keyed like the form's inputs. Leave the two `_mosparo_` tokens in or take them out - either works.
 

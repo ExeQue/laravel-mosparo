@@ -28,7 +28,7 @@ class Comment extends Component
     {
         $data = $this->validate(['comment' => ['required', 'string']]);
 
-        $this->result = $this->mosparo->verify($data, 'visible', fields: ['comment']) ? 'Accepted by mosparo.' : null;
+        $this->result = $this->mosparo->verify($data, ['comment'], 'visible') ? 'Accepted by mosparo.' : null;
     }
 
     public function render(): View

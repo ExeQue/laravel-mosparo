@@ -1,5 +1,6 @@
 <form class="card" wire:submit="send">
     <label>Comment <textarea name="comment" wire:model="comment"></textarea></label>
+    @error('comment') <p class="notice error">{{ $message }}</p> @enderror
 
     <x-mosparo
         project="visible"

@@ -14,7 +14,7 @@ class SignIn extends Component
 
     public function signIn(): void
     {
-        if (! $this->mosparo->verify($this->form, fields: ['email'])) {
+        if (! $this->mosparo->verify($this->form, ['email'])) {
             return;
         }
 
@@ -39,7 +39,7 @@ The trait gives the component `$mosparo`, which holds the tokens the box sends a
 
 ## What verify() does
 
-`$this->mosparo->verify($data, $project = null, $fields = [])`:
+`$this->mosparo->verify($data, $fields, $project = null)` returns `false` when the check fails - stop there. Step by step:
 
 1. Validates `$data` when it is a Livewire `Form`. A form failing validation throws as usual, and the tokens are kept for the next try. `$data` can also be an array of fields you have already validated.
 2. Returns `true` when mosparo is [disabled](switching-off.md).
@@ -47,12 +47,18 @@ The trait gives the component `$mosparo`, which holds the tokens the box sends a
 
 Once mosparo has seen the tokens, they are spent, whatever the answer. They are cleared, and the boxes in this component fetch new ones, so a form that failed for another reason, such as a wrong password, can be sent again.
 
-`fields` works as for [plain forms](plain-forms.md#fields-mosparo-must-check): the check fails unless mosparo checked each listed field and found it valid.
+`$fields` works as for [plain forms](plain-forms.md#fields-mosparo-must-check): the check fails unless mosparo checked each listed field and found it valid.
+
+Give the Form string properties for the fields mosparo checks. The browser sends text, and a float or boolean property compares as something else.
 
 ## Which fields mosparo sees
 
 mosparo compares what the box saw with what the server sends, field by field. Give every input a `name` matching its key in the data you verify, such as `name="email"` for `$form->email`. Nested data matches bracketed names: `name="address[street]"` for `$form->address['street']`.
 
+## Sending the form
+
+The box checks the form when it is submitted, so send it with `wire:submit` on the `<form>`. An action called by `wire:click` on a plain button skips the box's check, and `verify()` then fails for lack of tokens.
+
 ## More than one form
 
-Each Livewire component has one `$mosparo`, so give each protected form its own component. Two boxes in one component share the tokens.
+Each Livewire component has one `$mosparo`, so give each protected form its own component. The box hands its tokens to the component it is rendered in: put the trait on that component, not on a parent.

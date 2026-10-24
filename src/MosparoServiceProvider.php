@@ -20,6 +20,7 @@ class MosparoServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->loadTranslationsFrom(__DIR__.'/../lang', 'mosparo');
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'mosparo');
 
         Blade::anonymousComponentPath(__DIR__.'/../resources/views/components');
 
@@ -47,7 +48,7 @@ class MosparoServiceProvider extends ServiceProvider
      */
     private function compileBox(string $project): string
     {
-        return "<?php echo \\Illuminate\\Support\\Facades\\Blade::render('<x-mosparo :project=\"\$project\" />', ['project' => ".$this->projectExpression($project).']); ?>';
+        return "<?php echo view('mosparo::components.mosparo', ['project' => ".$this->projectExpression($project).", 'attributes' => new \\Illuminate\\View\\ComponentAttributeBag])->render(); ?>";
     }
 
     /**

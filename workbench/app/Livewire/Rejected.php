@@ -33,7 +33,7 @@ class Rejected extends Component
             $data['message'] .= ' - changed on the server';
         }
 
-        $this->result = $this->mosparo->verify($data, fields: ['message'])
+        $this->result = $this->mosparo->verify($data, ['message'])
             ? 'Accepted by mosparo.'
             : null;
     }

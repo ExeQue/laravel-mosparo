@@ -10,29 +10,30 @@ Disable mosparo in `phpunit.xml`, and your forms pass without a box or tokens:
 
 Livewire forms are still validated, so the rest of your tests behave as before.
 
-## Testing a rejection
+## Fake mosparo
 
-Mock the facade's `passes()` for a backend check:
+To test what happens when mosparo accepts or rejects a submission, fake it. Every project then renders a working box and answers checks with the result you give, without asking mosparo:
 
 ```php
 use ExeQue\Mosparo\Facades\Mosparo;
 
-Mosparo::shouldReceive('passes')->andReturn(false);
+Mosparo::fake(passes: false);
 ```
 
-A Livewire component calls the project, not the facade. Enable mosparo for the test, send the component a pair of tokens, and point the project at a mosparo that cannot be reached - the check then fails as it would against a rejecting mosparo:
+A check still needs both tokens. A plain form post sends them as fields:
+
+```php
+$this->post('/newsletter', [
+    'email' => 'ada@example.com',
+    '_mosparo_submitToken' => 'submit',
+    '_mosparo_validationToken' => 'validation',
+])->assertSessionHasErrors('_mosparo_submitToken');
+```
+
+A Livewire component receives them the way the box sends them:
 
 ```php
 use ExeQue\Mosparo\Mosparo as MosparoManager;
-use GuzzleHttp\Exception\ConnectException;
-use GuzzleHttp\Promise\Create;
-
-config([
-    'mosparo.enabled' => true,
-    'mosparo.host' => 'https://mosparo.invalid',
-    'mosparo.projects.default' => ['uuid' => 'uuid', 'public_key' => 'public', 'private_key' => 'private'],
-    'mosparo.client_arguments.handler' => fn ($request) => Create::rejectionFor(new ConnectException('Unreachable', $request)),
-]);
 
 Livewire::test(SignIn::class)
     ->dispatch(MosparoManager::CHECKED_EVENT, submitToken: 'submit', validationToken: 'validation')
@@ -40,4 +41,14 @@ Livewire::test(SignIn::class)
     ->set('form.password', 'password')
     ->call('signIn')
     ->assertHasErrors('mosparo.submitToken');
+```
+
+The fake keeps every check it answered, with the project, the form data and the fields:
+
+```php
+$fake = Mosparo::fake();
+
+// ...
+
+expect($fake->checks)->toHaveCount(1);
 ```

@@ -8,6 +8,6 @@
 - [Several projects](projects.md) - More than one mosparo project in one application
 - [Disabling mosparo](switching-off.md) - For local work, tests and screenshots
 - [Translations](translations.md) - The error message in 29 languages
-- [Testing your application](testing.md) - Forms with mosparo in your test suite
+- [Testing your application](testing.md) - Disabling mosparo, and `Mosparo::fake()`
 - [Configuration](configuration.md) - Every option in `config/mosparo.php`
 - [How it works](how-it-works.md) - Tokens, the check and the reset

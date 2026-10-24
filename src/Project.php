@@ -6,6 +6,7 @@ namespace ExeQue\Mosparo;
 
 use ExeQue\Mosparo\Exceptions\IncompleteProject;
 use ExeQue\Mosparo\Support\FormData;
+use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\HtmlString;
 use Mosparo\ApiClient\Client;
 use Mosparo\ApiClient\Exception;
@@ -28,8 +29,8 @@ class Project
     }
 
     /**
-     * Whether mosparo is switched on. Switched off, every check passes and
-     * nothing is rendered.
+     * Whether mosparo is enabled. Disabled, every check passes and nothing
+     * is rendered.
      */
     public function enabled(): bool
     {
@@ -52,15 +53,16 @@ class Project
     }
 
     /**
-     * Whether mosparo lets the submission through. Passes while switched off.
+     * Whether mosparo lets the submission through. Passes while disabled.
      * Fails when a token is missing, when mosparo cannot be reached (the
      * exception is reported), and when one of $fields was not checked by
      * mosparo and found valid.
      *
      * @param array<array-key, mixed> $formData The submitted fields, keyed like the form's inputs.
      * @param list<string> $fields Fields that must have been part of mosparo's check, such as `message`.
+     *                             A field kept out of the box's check is otherwise not noticed.
      */
-    public function passes(array $formData, mixed $submitToken, mixed $validationToken, array $fields = []): bool
+    public function passes(array $formData, mixed $submitToken, mixed $validationToken, array $fields): bool
     {
         if (! $this->enabled) {
             return true;
@@ -97,7 +99,7 @@ class Project
      * @param array<array-key, mixed> $formData The submitted fields, keyed like the form's inputs.
      *
      * @throws Exception When mosparo cannot be reached or answers nonsense.
-     * @throws IncompleteProject When the project misses its host, uuid or a key.
+     * @throws IncompleteProject When the project misses its host, uuid or a key, or its host has a path.
      */
     public function verify(array $formData, string $submitToken, string $validationToken): VerificationResult
     {
@@ -107,7 +109,7 @@ class Project
     /**
      * mosparo's API client for this project.
      *
-     * @throws IncompleteProject When the project misses its host, uuid or a key.
+     * @throws IncompleteProject When the project misses its host, uuid or a key, or its host has a path.
      */
     public function client(): Client
     {
@@ -145,7 +147,7 @@ class Project
 
     /**
      * mosparo's frontend script, and the script that starts every box on the
-     * page, for the page head. Empty while switched off.
+     * page, for the page head. Empty while disabled.
      *
      * @throws IncompleteProject When the project misses its host, uuid or a key.
      */
@@ -157,8 +159,11 @@ class Project
 
         $this->ensureComplete();
 
+        $nonce = Vite::cspNonce() === null ? '' : ' nonce="'.e(Vite::cspNonce()).'"';
+
         return new HtmlString(sprintf(
-            '<script>%s</script>'."\n".'<script src="%s/build/mosparo-frontend.js" defer onload="window.laravelMosparo.start()"></script>',
+            '<script%1$s>%2$s</script>'."\n".'<script%1$s src="%3$s/build/mosparo-frontend.js" defer></script>',
+            $nonce,
             self::boxes(),
             e($this->host()),
         ));
@@ -183,6 +188,11 @@ class Project
 
         if ($missing !== []) {
             throw IncompleteProject::missing($this->name, $missing);
+        }
+
+        // mosparo's API client puts its paths at the root of the host.
+        if (trim((string) parse_url($this->host(), PHP_URL_PATH), '/') !== '') {
+            throw IncompleteProject::hostWithPath($this->name, $this->host());
         }
     }
 

@@ -23,7 +23,8 @@ return [
     | Host
     |--------------------------------------------------------------------------
     |
-    | The mosparo installation, for every project that sets no host of its own.
+    | The mosparo installation, for every project that sets no host of its
+    | own: its origin, such as https://mosparo.example.com, without a path.
     |
     */
 
