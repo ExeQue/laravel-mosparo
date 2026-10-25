@@ -8,7 +8,7 @@ The workbench has four pages of forms against a real mosparo: a Livewire sign-in
 
 ### With lerd
 
-[lerd](https://github.com/lerd-dev/lerd) serves the workbench at `https://laravel-mosparo.test`, and `.lerd.yaml` asks for its mosparo service.
+[lerd](https://github.com/lerd-env/lerd) serves the workbench at `https://laravel-mosparo.test`, and `.lerd.yaml` asks for its mosparo service.
 
 ```bash
 composer install
