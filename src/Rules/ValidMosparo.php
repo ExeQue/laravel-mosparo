@@ -8,6 +8,8 @@ use Closure;
 use ExeQue\Mosparo\Mosparo;
 use Illuminate\Contracts\Validation\DataAwareRule;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 /**
  * Checks a plain form post with mosparo: the submitted fields, with the two
@@ -16,6 +18,13 @@ use Illuminate\Contracts\Validation\ValidationRule;
  *
  *     '_mosparo_submitToken' => [new ValidMosparo(['email', 'message'])],
  *     '_mosparo_submitToken' => [new ValidMosparo(['email'], project: 'newsletter')],
+ *
+ * A JSON or GraphQL input sends the tokens as an object of their own instead,
+ * next to the fields they cover. Put the rule on that object; the fields are
+ * then its siblings:
+ *
+ *     'input.mosparo' => [new ValidMosparo(['email'])],
+ *     // input: {email: "…", mosparo: {submit_token: "…", validation_token: "…"}}
  */
 class ValidMosparo implements DataAwareRule, ValidationRule
 {
@@ -51,15 +60,37 @@ class ValidMosparo implements DataAwareRule, ValidationRule
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
+        [$formData, $submitToken, $validationToken] = is_array($value)
+            ? $this->fromTokensObject($attribute, $value)
+            : [$this->data, $this->data['_mosparo_submitToken'] ?? null, $this->data['_mosparo_validationToken'] ?? null];
+
         $passes = app(Mosparo::class)->project($this->project)->passes(
-            $this->data,
-            $this->data['_mosparo_submitToken'] ?? null,
-            $this->data['_mosparo_validationToken'] ?? null,
+            $formData,
+            $submitToken,
+            $validationToken,
             $this->fields,
         );
 
         if (! $passes) {
             $fail('mosparo::messages.failed')->translate();
         }
+    }
+
+    /**
+     * The tokens from the object the rule is on, and the fields next to it.
+     *
+     * @param array<array-key, mixed> $tokens
+     *
+     * @return array{0: array<array-key, mixed>, 1: mixed, 2: mixed}
+     */
+    private function fromTokensObject(string $attribute, array $tokens): array
+    {
+        $parent = str_contains($attribute, '.') ? Arr::get($this->data, Str::beforeLast($attribute, '.')) : $this->data;
+
+        return [
+            Arr::except((array) $parent, Str::afterLast($attribute, '.')),
+            $tokens['submit_token'] ?? null,
+            $tokens['validation_token'] ?? null,
+        ];
     }
 }

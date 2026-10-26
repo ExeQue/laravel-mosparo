@@ -71,3 +71,60 @@ it('lets everything through when switched off', function () {
 
     expect(validateWithMosparo([])->passes())->toBeTrue();
 });
+
+describe('a tokens object next to the fields, as JSON and GraphQL send it', function () {
+    function validateInputWithMosparo(array $data, array $fields = []): Illuminate\Validation\Validator
+    {
+        return Validator::make($data, [
+            'input.mosparo' => [new ValidMosparo($fields)],
+        ]);
+    }
+
+    it('checks the fields next to the object with its tokens', function () {
+        $requests = mosparoAnswers();
+
+        $validator = validateInputWithMosparo([
+            'input' => [
+                'email' => 'ada@example.com',
+                'mosparo' => ['submit_token' => 'submit', 'validation_token' => 'validation'],
+            ],
+        ], fields: ['email']);
+
+        expect($validator->passes())->toBeTrue()
+            ->and($requests[0]['formData'])->toBe(['email' => hash('sha256', 'ada@example.com')])
+            ->and($requests[0]['submitToken'])->toBe('submit');
+    });
+
+    it('takes the whole data as the fields when the object is at the top', function () {
+        $requests = mosparoAnswers();
+
+        $validator = Validator::make([
+            'email' => 'ada@example.com',
+            'mosparo' => ['submit_token' => 'submit', 'validation_token' => 'validation'],
+        ], [
+            'mosparo' => [new ValidMosparo(['email'])],
+        ]);
+
+        expect($validator->passes())->toBeTrue()
+            ->and($requests[0]['formData'])->toBe(['email' => hash('sha256', 'ada@example.com')]);
+    });
+
+    it('fails an object without both tokens', function () {
+        $requests = mosparoAnswers();
+
+        $validator = validateInputWithMosparo([
+            'input' => ['email' => 'ada@example.com', 'mosparo' => ['submit_token' => 'submit']],
+        ]);
+
+        expect($validator->fails())->toBeTrue()
+            ->and($validator->errors()->first('input.mosparo'))->toBe('The spam check failed. Please try again.')
+            ->and($requests)->toHaveCount(0);
+    });
+
+    it('fails an input sent without the object', function () {
+        $requests = mosparoAnswers();
+
+        expect(validateInputWithMosparo(['input' => ['email' => 'ada@example.com']])->fails())->toBeTrue()
+            ->and($requests)->toHaveCount(0);
+    });
+});
