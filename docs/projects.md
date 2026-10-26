@@ -37,7 +37,7 @@ Name the project at the box and at the check, with the same name in both places:
 ```
 
 ```php
-'_mosparo_submitToken' => [new ValidMosparo(['email'], project: 'newsletter')],
+'_mosparo_submitToken' => [ValidMosparo::make(['email'], project: 'newsletter')],
 
 $this->mosparo->verify($this->form, ['email'], 'newsletter');
 
