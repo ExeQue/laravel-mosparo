@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ExeQue\Mosparo\Rules;
 
 use Closure;
+use ExeQue\Mosparo\Exceptions\UnknownTokenSet;
 use ExeQue\Mosparo\Mosparo;
 use Illuminate\Contracts\Validation\DataAwareRule;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -31,6 +32,10 @@ use Illuminate\Validation\Validator;
  * object names them otherwise:
  *
  *     'input' => [ValidMosparo::make(['email'])->tokens('mosparo_submit_token', 'mosparo_validation_token')],
+ *
+ * or names a set of them from config/mosparo.php's `token_sets`:
+ *
+ *     'input' => [ValidMosparo::make(['email'])->for('api')],
  *
  * A failed check is reported on the submit token, so `input.mosparo_submit_token`
  * above and `_mosparo_submitToken` on a plain form post.
@@ -82,6 +87,24 @@ class ValidMosparo implements DataAwareRule, ValidationRule, ValidatorAwareRule
         $this->validationTokenKey = $validationToken;
 
         return $this;
+    }
+
+    /**
+     * The token names of a set in config/mosparo.php's `token_sets`.
+     *
+     * @throws UnknownTokenSet when the set is not configured as two names
+     */
+    public function for(string $set): static
+    {
+        $names = config("mosparo.token_sets.{$set}");
+
+        if (! is_array($names) || count($names) !== 2) {
+            throw UnknownTokenSet::named($set);
+        }
+
+        [$submitToken, $validationToken] = array_values($names);
+
+        return $this->tokens((string) $submitToken, (string) $validationToken);
     }
 
     /**

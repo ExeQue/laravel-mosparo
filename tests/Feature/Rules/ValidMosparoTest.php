@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use ExeQue\Mosparo\Exceptions\MosparoException;
+use ExeQue\Mosparo\Exceptions\UnknownTokenSet;
 use ExeQue\Mosparo\Rules\ValidMosparo;
 use Illuminate\Support\Facades\Validator;
 
@@ -100,6 +102,31 @@ describe('on the object that holds the fields and the tokens, as JSON and GraphQ
             ->and($requests[0]['submitToken'])->toBe('submit')
             ->and($requests[0]['formData'])->toBe(['email' => hash('sha256', 'ada@example.com')]);
     });
+
+    it('reads the tokens under the names of a configured set', function () {
+        config()->set('mosparo.token_sets.api', ['mosparo_submit_token', 'mosparo_validation_token']);
+        $requests = mosparoAnswers();
+
+        $validator = validateObject(
+            ['email' => 'ada@example.com', 'mosparo_submit_token' => 'submit', 'mosparo_validation_token' => 'validation'],
+            ValidMosparo::make(['email'])->for('api'),
+        );
+
+        expect($validator->passes())->toBeTrue()
+            ->and($requests[0]['submitToken'])->toBe('submit')
+            ->and($requests[0]['formData'])->toBe(['email' => hash('sha256', 'ada@example.com')]);
+    });
+
+    it('refuses a token set that is not configured as two names', function (mixed $set) {
+        config()->set('mosparo.token_sets.api', $set);
+
+        expect(fn () => ValidMosparo::make()->for('api'))
+            ->toThrow(UnknownTokenSet::class, 'The mosparo token set [api] is not configured as two token names.')
+            ->and(UnknownTokenSet::named('api'))->toBeInstanceOf(MosparoException::class);
+    })->with([
+        'missing' => [null],
+        'one name' => [['mosparo_submit_token']],
+    ]);
 
     it('reports a rejected check on the submit token', function () {
         mosparoAnswers(valid: false);

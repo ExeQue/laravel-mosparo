@@ -86,6 +86,23 @@ return [
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Token sets
+    |--------------------------------------------------------------------------
+    |
+    | Names the two tokens have in an API input, by a name of your own, for
+    | inputs that do not send mosparo's _mosparo_submitToken and
+    | _mosparo_validationToken: ValidMosparo::make(['email'])->for('api').
+    |
+    */
+
+    'token_sets' => [
+
+        // 'api' => ['mosparo_submit_token', 'mosparo_validation_token'],
+
+    ],
+
     'projects' => [
 
         'default' => [
