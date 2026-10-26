@@ -8,6 +8,7 @@ use Closure;
 use ExeQue\Mosparo\Mosparo;
 use Illuminate\Contracts\Validation\DataAwareRule;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Contracts\Validation\Validator as ValidatorContract;
 use Illuminate\Contracts\Validation\ValidatorAwareRule;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
@@ -46,7 +47,7 @@ class ValidMosparo implements DataAwareRule, ValidationRule, ValidatorAwareRule
      */
     private array $data = [];
 
-    private ?Validator $validator = null;
+    private Validator $validator;
 
     private string $submitTokenKey = '_mosparo_submitToken';
 
@@ -93,9 +94,10 @@ class ValidMosparo implements DataAwareRule, ValidationRule, ValidatorAwareRule
         return $this;
     }
 
-    public function setValidator(\Illuminate\Contracts\Validation\Validator $validator): static
+    public function setValidator(ValidatorContract $validator): static
     {
-        $this->validator = $validator instanceof Validator ? $validator : null;
+        /** @var Validator $validator Laravel's own, which runs the rule. */
+        $this->validator = $validator;
 
         return $this;
     }
@@ -116,7 +118,7 @@ class ValidMosparo implements DataAwareRule, ValidationRule, ValidatorAwareRule
             return;
         }
 
-        if (! $onObject || $this->validator === null) {
+        if (! $onObject) {
             $fail('mosparo::messages.failed')->translate();
 
             return;
@@ -143,12 +145,9 @@ class ValidMosparo implements DataAwareRule, ValidationRule, ValidatorAwareRule
      */
     private function failOn(string $key): void
     {
-        $validator = $this->validator;
-        assert($validator !== null);
-
-        $validator->errors()->add(
+        $this->validator->errors()->add(
             $key,
-            $validator->customMessages[$key] ?? $validator->getTranslator()->get('mosparo::messages.failed'),
+            $this->validator->customMessages[$key] ?? $this->validator->getTranslator()->get('mosparo::messages.failed'),
         );
     }
 }
