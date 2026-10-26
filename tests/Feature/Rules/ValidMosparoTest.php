@@ -109,6 +109,36 @@ describe('a tokens object next to the fields, as JSON and GraphQL send it', func
             ->and($requests[0]['formData'])->toBe(['email' => hash('sha256', 'ada@example.com')]);
     });
 
+    it('reads the tokens under the keys it is given', function () {
+        $requests = mosparoAnswers();
+
+        $validator = Validator::make([
+            'input' => [
+                'email' => 'ada@example.com',
+                'mosparo' => ['submitToken' => 'submit', 'validationToken' => 'validation'],
+            ],
+        ], [
+            'input.mosparo' => [new ValidMosparo(['email'])->tokens('submitToken', 'validationToken')],
+        ]);
+
+        expect($validator->passes())->toBeTrue()
+            ->and($requests[0]['submitToken'])->toBe('submit')
+            ->and($requests[0]['formData'])->toBe(['email' => hash('sha256', 'ada@example.com')]);
+    });
+
+    it('fails an object whose tokens are under other keys than it was given', function () {
+        $requests = mosparoAnswers();
+
+        $validator = Validator::make([
+            'input' => ['mosparo' => ['submit_token' => 'submit', 'validation_token' => 'validation']],
+        ], [
+            'input.mosparo' => [new ValidMosparo([])->tokens('submitToken', 'validationToken')],
+        ]);
+
+        expect($validator->fails())->toBeTrue()
+            ->and($requests)->toHaveCount(0);
+    });
+
     it('fails an object without both tokens', function () {
         $requests = mosparoAnswers();
 

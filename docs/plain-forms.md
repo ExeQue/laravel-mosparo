@@ -48,6 +48,12 @@ An API client sends the tokens as an object of their own, next to the fields the
 'input.mosparo' => [new ValidMosparo(['email'])],
 ```
 
+An API that names the two tokens otherwise, such as `submitToken` and `validationToken`, says so:
+
+```php
+'input.mosparo' => [new ValidMosparo(['email'])->tokens('submitToken', 'validationToken')],
+```
+
 The object itself is not sent to mosparo. Its sibling fields keep their names, so the form in the browser names its inputs the same: `email`, not `input[email]`.
 
 mosparo checks the fields the browser sent it, and fails a field the server does not send back with the same value. Send the input exactly as the form holds it, including fields that are empty; fields the server has and the browser did not are ignored.

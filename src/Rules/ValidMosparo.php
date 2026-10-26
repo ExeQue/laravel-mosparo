@@ -25,6 +25,10 @@ use Illuminate\Support\Str;
  *
  *     'input.mosparo' => [new ValidMosparo(['email'])],
  *     // input: {email: "…", mosparo: {submit_token: "…", validation_token: "…"}}
+ *
+ * An API that names the two tokens otherwise says so:
+ *
+ *     'input.mosparo' => [new ValidMosparo(['email'])->tokens('submitToken', 'validationToken')],
  */
 class ValidMosparo implements DataAwareRule, ValidationRule
 {
@@ -37,6 +41,10 @@ class ValidMosparo implements DataAwareRule, ValidationRule
      * @var array<string, mixed>
      */
     private array $data = [];
+
+    private string $submitTokenKey = 'submit_token';
+
+    private string $validationTokenKey = 'validation_token';
 
     /**
      * @param list<string> $fields Fields that must have been part of mosparo's check.
@@ -54,6 +62,20 @@ class ValidMosparo implements DataAwareRule, ValidationRule
     public function setData(array $data): static
     {
         $this->data = $data;
+
+        return $this;
+    }
+
+    /**
+     * The keys of the two tokens in a tokens object; `submit_token` and
+     * `validation_token` unless given. A plain form post always sends
+     * `_mosparo_submitToken` and `_mosparo_validationToken`, so this does not
+     * apply to it.
+     */
+    public function tokens(string $submitToken, string $validationToken): static
+    {
+        $this->submitTokenKey = $submitToken;
+        $this->validationTokenKey = $validationToken;
 
         return $this;
     }
@@ -89,8 +111,8 @@ class ValidMosparo implements DataAwareRule, ValidationRule
 
         return [
             Arr::except((array) $parent, Str::afterLast($attribute, '.')),
-            $tokens['submit_token'] ?? null,
-            $tokens['validation_token'] ?? null,
+            $tokens[$this->submitTokenKey] ?? null,
+            $tokens[$this->validationTokenKey] ?? null,
         ];
     }
 }
