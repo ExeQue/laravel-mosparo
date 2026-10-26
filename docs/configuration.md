@@ -15,6 +15,7 @@ php artisan vendor:publish --tag=mosparo-config
 | `cache.store` | `MOSPARO_CACHE_STORE` | the default store | |
 | `cache.ttl` | `MOSPARO_CACHE_TTL` | `300` | Seconds an entry is kept. |
 | `default` | `MOSPARO_PROJECT` | `default` | The project used when none is named. |
+| `token_sets` | | `[]` | Token names by a name of your own, `['api' => ['mosparo_submit_token', 'mosparo_validation_token']]`, for `ValidMosparo::make()->for('api')`. See [Plain forms](plain-forms.md#json-and-graphql-inputs). |
 | `projects.default.uuid` | `MOSPARO_UUID` | | The default project's uuid. |
 | `projects.default.public_key` | `MOSPARO_PUBLIC_KEY` | | |
 | `projects.default.private_key` | `MOSPARO_PRIVATE_KEY` | | Only ever used on the server. |

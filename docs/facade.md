@@ -52,4 +52,5 @@ Every exception the package throws implements `ExeQue\Mosparo\Exceptions\Mosparo
 | `ConnectionFailed` | mosparo cannot be reached. |
 | `RequestFailed` | mosparo refuses the request or answers something unexpected. `debugInformation` holds what mosparo adds in its debug mode. |
 | `UnknownProject` | A project name that is not configured. |
+| `UnknownTokenSet` | A token set that is not configured as two names, given to `ValidMosparo::for()`. |
 | `IncompleteProject` | An enabled project without its host, uuid or a key, or with a host that has a path. |

@@ -55,6 +55,19 @@ An API that names the tokens otherwise says so, and they are kept out of the fie
 'input' => [ValidMosparo::make(['email'])->tokens('mosparo_submit_token', 'mosparo_validation_token')],
 ```
 
+An application that uses the same names in several inputs names them once, as a set in `config/mosparo.php`, and the rule asks for the set:
+
+```php
+// config/mosparo.php
+'token_sets' => [
+    'api' => ['mosparo_submit_token', 'mosparo_validation_token'],
+],
+
+'input' => [ValidMosparo::make(['email'])->for('api')],
+```
+
+A set that is missing, or does not hold two names, throws `UnknownTokenSet`.
+
 A failed check is reported on the submit token, `input.mosparo_submit_token` here, so a message given for that key is used:
 
 ```php

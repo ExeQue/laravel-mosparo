@@ -11,7 +11,7 @@ Use it when a form needs mosparo's spam check, when a form that has one changes,
 ## How it works, in short
 - `@mosparoScript` in the page head loads mosparo's frontend and the script that starts every box.
 - `@mosparo` or `<x-mosparo />` inside a `<form>` puts the box there. On submit, the box sends the form's fields to mosparo, which hands back two tokens.
-- The server checks the submission with those tokens: `ValidMosparo` on the object that holds the fields and the tokens in a JSON or GraphQL input (`'input' => [ValidMosparo::make(['email'])]`, token names changed with `->tokens(...)`), or on `_mosparo_submitToken` for a plain form post, `$this->mosparo->verify()` in a Livewire component, `Mosparo::passes()` anywhere else.
+- The server checks the submission with those tokens: `ValidMosparo` on the object that holds the fields and the tokens in a JSON or GraphQL input (`'input' => [ValidMosparo::make(['email'])]`, token names changed with `->tokens(...)` or a set from `token_sets` with `->for('api')`), or on `_mosparo_submitToken` for a plain form post, `$this->mosparo->verify()` in a Livewire component, `Mosparo::passes()` anywhere else.
 - A pair of tokens can be checked once. In Livewire, the box fetches new ones after every check by itself.
 
 ## Rules
