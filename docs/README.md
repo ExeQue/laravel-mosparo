@@ -2,7 +2,7 @@
 
 - [Installation](installation.md) - Requirements, and the four keys from mosparo
 - [The box](box.md) - `@mosparoScript`, `@mosparo`, `<x-mosparo />` and `@mosparoError`
-- [Plain forms](plain-forms.md) - The `ValidMosparo` validation rule, and fields mosparo must check
+- [Plain forms](plain-forms.md) - The `ValidMosparo` validation rule, fields mosparo must check, and JSON or GraphQL inputs
 - [Livewire](livewire.md) - The `InteractsWithMosparo` trait and `verify()`
 - [The facade](facade.md) - Talking to mosparo from the backend, and the exceptions
 - [Reading data](data.md) - Statistics, rule packages and metadata

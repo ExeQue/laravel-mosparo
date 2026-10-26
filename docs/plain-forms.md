@@ -39,6 +39,19 @@ List every field a person types into. Passwords, hidden fields, checkboxes, radi
 
 Fields are named as in the form: `address[street]`, or `rows[0][name]` in a repeated group.
 
+## JSON and GraphQL inputs
+
+An API client sends the tokens as an object of their own, next to the fields they cover, rather than as two fields named `_mosparo_*`. Put the rule on that object; it reads `submit_token` and `validation_token` from it, and sends mosparo the fields beside it:
+
+```php
+// input: {email: "ada@example.com", mosparo: {submit_token: "…", validation_token: "…"}}
+'input.mosparo' => [new ValidMosparo(['email'])],
+```
+
+The object itself is not sent to mosparo. Its sibling fields keep their names, so the form in the browser names its inputs the same: `email`, not `input[email]`.
+
+mosparo checks the fields the browser sent it, and fails a field the server does not send back with the same value. Send the input exactly as the form holds it, including fields that are empty; fields the server has and the browser did not are ignored.
+
 ## Another project
 
 ```php
