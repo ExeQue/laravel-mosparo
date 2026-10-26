@@ -52,7 +52,7 @@ A plain form post is checked by a validation rule:
 ```php
 use ExeQue\Mosparo\Rules\ValidMosparo;
 
-'_mosparo_submitToken' => [new ValidMosparo(['email'])],
+'_mosparo_submitToken' => [ValidMosparo::make(['email'])],
 ```
 
 A Livewire component uses the trait:

@@ -12,7 +12,7 @@ class SubscribeRequest extends FormRequest
     {
         return [
             'email' => ['required', 'email'],
-            '_mosparo_submitToken' => [new ValidMosparo(['email'])],
+            '_mosparo_submitToken' => [ValidMosparo::make(['email'])],
         ];
     }
 }
@@ -32,7 +32,7 @@ After a post, the page reloads and the box starts again with new tokens.
 mosparo checks the fields the box sends it. Someone sending spam can keep a field out of that check, for example by removing its `name` attribute before the box runs, and then add it back to the post. The rule therefore takes the fields that matter, and fails unless mosparo checked each of them and found it valid:
 
 ```php
-new ValidMosparo(['email', 'message'])
+ValidMosparo::make(['email', 'message'])
 ```
 
 List every field a person types into. Passwords, hidden fields, checkboxes, radio buttons and files are never part of mosparo's check, so they cannot be listed. An empty list checks the tokens alone.
@@ -41,27 +41,32 @@ Fields are named as in the form: `address[street]`, or `rows[0][name]` in a repe
 
 ## JSON and GraphQL inputs
 
-An API client sends the tokens as an object of their own, next to the fields they cover, rather than as two fields named `_mosparo_*`. Put the rule on that object; it reads `submit_token` and `validation_token` from it, and sends mosparo the fields beside it:
+An API input holds its fields and the two tokens in one object. Put the rule on that object; it reads the tokens from it and sends mosparo the other fields:
 
 ```php
-// input: {email: "ada@example.com", mosparo: {submit_token: "…", validation_token: "…"}}
-'input.mosparo' => [new ValidMosparo(['email'])],
+// input: {email: "ada@example.com", _mosparo_submitToken: "…", _mosparo_validationToken: "…"}
+'input' => [ValidMosparo::make(['email'])],
 ```
 
-An API that names the two tokens otherwise, such as `submitToken` and `validationToken`, says so:
+An API that names the tokens otherwise says so, and they are kept out of the fields sent to mosparo:
 
 ```php
-'input.mosparo' => [new ValidMosparo(['email'])->tokens('submitToken', 'validationToken')],
+// input: {email: "…", mosparo_submit_token: "…", mosparo_validation_token: "…"}
+'input' => [ValidMosparo::make(['email'])->tokens('mosparo_submit_token', 'mosparo_validation_token')],
 ```
 
-The object itself is not sent to mosparo. Its sibling fields keep their names, so the form in the browser names its inputs the same: `email`, not `input[email]`.
+A failed check is reported on the submit token, `input.mosparo_submit_token` here, so a message given for that key is used:
 
-mosparo checks the fields the browser sent it, and fails a field the server does not send back with the same value. Send the input exactly as the form holds it, including fields that are empty; fields the server has and the browser did not are ignored.
+```php
+$messages = ['input.mosparo_submit_token' => 'Spamtjekket fejlede. Prøv igen.'];
+```
+
+The fields keep their names, so the form in the browser names its inputs `email`, not `input[email]`. mosparo checks the fields the browser sent it, and fails a field the server does not send back with the same value. Send the input exactly as the form holds it, including fields that are empty; fields the server has and the browser did not are ignored.
 
 ## Another project
 
 ```php
-new ValidMosparo(['email'], project: 'newsletter')
+ValidMosparo::make(['email'], project: 'newsletter')
 ```
 
 See [Several projects](projects.md).
