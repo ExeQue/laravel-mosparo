@@ -418,6 +418,6 @@ class Project
     {
         static $script;
 
-        return $script ??= trim((string) file_get_contents(__DIR__.'/../resources/js/boxes.js'));
+        return $script ??= trim((string) file_get_contents(__DIR__.'/../resources/js/boxes.min.js'));
     }
 }

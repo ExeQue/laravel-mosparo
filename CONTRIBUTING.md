@@ -44,6 +44,13 @@ composer lint:test      # check the formatting, as CI does
 
 With Docker, run them through the composer service: `docker compose run --rm composer test`.
 
+The page gets `resources/js/boxes.min.js`, built from `resources/js/boxes.js`. After changing `boxes.js`, rebuild it and commit both; CI fails when they differ:
+
+```bash
+npm install
+npm run build
+```
+
 The documentation is built with VitePress:
 
 ```bash

@@ -35,7 +35,17 @@ describe('@mosparoScript', function () {
 
         expect(Blade::render('@mosparoScript'))
             ->toContain('<script src="https://mosparo.example/build/mosparo-frontend.js?v=20261024" defer></script>')
-            ->toContain('window.laravelMosparo = { start };');
+            ->toContain('window.laravelMosparo={start:');
+    });
+
+    it('ships the script that starts the boxes minified and without comments', function () {
+        preg_match('/<script>(.*)<\/script>\n/s', Blade::render('@mosparoScript'), $matches);
+
+        expect($matches[1])
+            ->not->toBeEmpty()
+            ->not->toContain("\n")
+            ->not->toContain('//')
+            ->not->toContain('/*');
     });
 
     it('loads the frontend from a named project\'s host', function () {
