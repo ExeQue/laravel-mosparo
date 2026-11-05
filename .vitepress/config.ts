@@ -6,7 +6,8 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: 'Laravel × mosparo',
   description: 'mosparo spam protection for Laravel and Livewire.',
-  base: '/laravel-mosparo/',
+  // GitHub Pages serves the docs under /laravel-mosparo/; the lerd docs worker serves them at the root of its subdomain.
+  base: process.env.DOCS_BASE ?? '/laravel-mosparo/',
   lastUpdated: true,
   cleanUrls: true,
 
@@ -35,6 +36,8 @@ export default defineConfig({
   vite: {
     publicDir: fileURLToPath(new URL('../art', import.meta.url)),
     server: {
+      // Served through lerd on docs.laravel-mosparo.test, which Vite would otherwise refuse.
+      allowedHosts: ['.test'],
       watch: {
         ignored: ['**/vendor/**', '**/workbench/**', '**/tests/**', '**/.phpunit.cache/**'],
       },
